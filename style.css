@@ -111,12 +111,16 @@ a:hover {
 
 .btn-contact {
   margin-left: auto;
+  display: inline-block;
   padding: 8px 16px;
   border: 1px solid #1a1a1a;
   border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #1a1a1a;
+  line-height: 1;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .btn-contact:hover {
