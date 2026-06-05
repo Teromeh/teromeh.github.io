@@ -1,0 +1,31 @@
+---
+title: "Project 1"
+format: 
+  dashboard:
+    theme: flatly
+---
+
+```{r}
+#| include: false
+library(plotly)
+
+data <- data.frame(
+  category = c("A", "B", "C", "D", "E"),
+  value = c(23, 45, 12, 67, 34)
+)
+```
+
+## Chart
+
+```{r}
+plot_ly(data, x = ~category, y = ~value, type = "bar",
+        marker = list(color = "#00BCD4")) |>
+  layout(
+    xaxis = list(title = "Category"),
+    yaxis = list(title = "Value"),
+    plot_bgcolor = "white",
+    paper_bgcolor = "white"
+  )
+```
+
+------------------------------------------------------------------------
