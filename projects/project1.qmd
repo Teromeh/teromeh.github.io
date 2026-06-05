@@ -15,6 +15,12 @@ data <- data.frame(
 )
 ```
 
+
+```{r}
+#| output: asis
+cat('<a href="../index.html" class="back-link">← Back</a>')
+```
+
 ## Chart
 
 ```{r}
