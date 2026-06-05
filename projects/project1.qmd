@@ -3,6 +3,9 @@ title: "Project 1"
 format: 
   dashboard:
     theme: flatly
+    include-in-header:
+      text: |
+        <style>.navbar { display: none; }</style>
 ---
 
 ```{r}
@@ -10,11 +13,15 @@ format:
 library(plotly)
 
 data <- data.frame(
-  category = c("A", "B", "C", "D", "E"),
-  value = c(23, 45, 12, 67, 34)
+  category = c("A", "B", "C", "D"),
+  value = c(23, 45, 12, 67)
+)
+
+data2 <- data.frame(
+  month = c("Jan", "Feb", "Mar", "Apr", "May"),
+  value = c(10, 25, 18, 40, 32)
 )
 ```
-
 
 ```{r}
 #| output: asis
@@ -34,4 +41,16 @@ plot_ly(data, x = ~category, y = ~value, type = "bar",
   )
 ```
 
-------------------------------------------------------------------------
+## Chart 2
+
+```{r}
+plot_ly(data2, x = ~month, y = ~value, type = "scatter", mode = "lines+markers",
+        line = list(color = "#D81B60"),
+        marker = list(color = "#D81B60")) |>
+  layout(
+    xaxis = list(title = "Month"),
+    yaxis = list(title = "Value"),
+    plot_bgcolor = "white",
+    paper_bgcolor = "white"
+  )
+```
