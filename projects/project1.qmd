@@ -2,10 +2,10 @@
 title: "Kuntavaalit 2025"
 format: 
   dashboard:
-    theme: [litera]
-    include-in-header:
-      text: |
-        <style>.navbar { display: none; }</style>
+    theme: [litera, custom.scss]
+    nav-buttons:
+      - icon: house
+        href: ../index.html
 ---
 
 ```{r}
@@ -41,11 +41,6 @@ party_data <- data |>
 
 party_data <- party_data |>
   mutate(party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>"))
-```
-
-```{r}
-#| output: asis
-cat('<a href="../index.html" class="back-link">← Back</a>')
 ```
 
 ## Chart
