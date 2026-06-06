@@ -1,5 +1,5 @@
 ---
-title: "Project 1"
+title: "Kuntavaalit 2025"
 format: 
   dashboard:
     theme: [litera]
@@ -23,7 +23,7 @@ party_colors <- c(
   "VIHR" = "#76B72A",
   "VAS" = "#F00A64",
   "PS" = "#002395",
-  "RKP" = "#007AC9",
+  "RKP" = "#ffdc5d",
   "KD" = "#118DFF",
   "LIIK" = "#cf83c8",
   "Muut" = "#000000"
@@ -59,10 +59,19 @@ plot_ly(party_data,
         color = ~puolueen_ryhman_nimilyhenne_suomeksi,
         colors = party_colors,
         hovertext = ~paste0(puolueen_ryhman_nimilyhenne_suomeksi, ": ",
-                            format(round(percentage, 1), decimal.mark = ","), " %"),
+                    format(round(percentage, 1), decimal.mark = ","), " %",
+                    "<br>Ääniä yhteensä: ", 
+                    format(total_votes, big.mark = " ")),
         hoverinfo = "text") |>
   layout(
     showlegend = FALSE,
+    hoverlabel = list(
+      bgcolor = "white",
+      bordercolor = "#1a1a1a",
+      font = list(color = "#1a1a1a", 
+                  family = "Outfit, sans-serif",
+                  size = 13)
+    ),
     xaxis = list(title = "", 
              range = c(0, max(party_data$percentage) * 1.3),
              showgrid = FALSE,
