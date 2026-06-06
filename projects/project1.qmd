@@ -3,6 +3,7 @@ title: "Kuntavaalit 2025"
 format: 
   dashboard:
     theme: [litera, custom.scss]
+    favicon: ../favicon.svg
     nav-buttons:
       - icon: house
         href: ../index.html
