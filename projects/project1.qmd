@@ -6,6 +6,8 @@ format:
     include-in-header:
       text: |
         <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
       - icon: house
         href: ../index.html
@@ -14,7 +16,6 @@ format:
 ```{r}
 #| include: false
 library(plotly)
-library(ggplot2)
 library(dplyr)
 
 data <- readRDS("df.rds")
@@ -67,7 +68,7 @@ plot_ly(party_data,
       bgcolor = "white",
       bordercolor = "#1a1a1a",
       font = list(color = "#1a1a1a", 
-                  family = "Outfit, sans-serif",
+                  family = "Inter, sans-serif",
                   size = 13)
     ),
     xaxis = list(title = "", 
@@ -75,8 +76,7 @@ plot_ly(party_data,
              showgrid = FALSE,
              showline = FALSE,
              zeroline = FALSE,
-             showticklabels = FALSE,
-             title = ""),
+             showticklabels = FALSE),
     yaxis = list(title = "",
              showgrid = FALSE,
              showline = FALSE,
@@ -85,7 +85,7 @@ plot_ly(party_data,
              ticklen = 10,
              tickcolor = "white",
              tickfont = list(color = "#1a1a1a", size = 14, 
-                             family = "Outfit, sans-serif",
+                             family = "Inter, sans-serif",
                              weight = "bold")),
     paper_bgcolor = "white",
     plot_bgcolor = "white",
@@ -98,7 +98,7 @@ plot_ly(party_data,
         xanchor = "left",
         xshift = 5,
       font = list(color = "#1a1a1a", size = 13, 
-                family = "Outfit, sans-serif")
+                family = "Inter, sans-serif")
   )
 })
   )
