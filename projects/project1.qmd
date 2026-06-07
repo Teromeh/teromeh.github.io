@@ -45,6 +45,10 @@ party_data <- data |>
 
 party_data <- party_data |>
   mutate(party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>"))
+
+age_data <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  count(ika_vaalipaivana, name = "maara")
 ```
 
 ## Chart
