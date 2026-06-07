@@ -46,12 +46,19 @@ party_data <- data |>
 party_data <- party_data |>
   mutate(party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>"))
 
-age_data <- data |>
+age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  count(ika_vaalipaivana, name = "maara")
+
+age_elected <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  filter(valintatieto == "Kyllä") |>
   count(ika_vaalipaivana, name = "maara")
 ```
 
-## Chart
+## Row
+
+### Column
 
 ```{r}
 plot_ly(party_data,
@@ -93,7 +100,7 @@ plot_ly(party_data,
                              weight = "bold")),
     paper_bgcolor = "white",
     plot_bgcolor = "white",
-      annotations = lapply(1:nrow(party_data), function(i) {
+    annotations = lapply(1:nrow(party_data), function(i) {
       list(
         x = party_data$percentage[i],
         y = party_data$party_bold[i],
@@ -101,9 +108,67 @@ plot_ly(party_data,
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
-      font = list(color = "#1a1a1a", size = 13, 
-                family = "Inter, sans-serif")
+        font = list(color = "#1a1a1a", size = 13, 
+                    family = "Inter, sans-serif")
+      )
+    })
   )
-})
+```
+
+## Row
+
+### Column
+
+```{r}
+plot_ly(age_all,
+        x = ~ika_vaalipaivana,
+        y = ~maara,
+        type = "bar",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
+                            "Ehdokkaita: ", maara),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "Kaikki ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
+    showlegend = FALSE,
+    hoverlabel = list(
+      bgcolor = "white",
+      bordercolor = "#1a1a1a",
+      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+    yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  )
+```
+
+### Column
+
+```{r}
+plot_ly(age_elected,
+        x = ~ika_vaalipaivana,
+        y = ~maara,
+        type = "bar",
+        marker = list(color = "#D81B60"),
+        hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
+                            "Valittuja: ", maara),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "Valitut ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
+    showlegend = FALSE,
+    hoverlabel = list(
+      bgcolor = "white",
+      bordercolor = "#1a1a1a",
+      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+    yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
   )
 ```
