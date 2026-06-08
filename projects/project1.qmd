@@ -97,9 +97,9 @@ plot_ly(party_data,
   layout(
     showlegend = FALSE,
     hoverlabel = list(
-      bgcolor = "white",
-      bordercolor = "#1a1a1a",
-      font = list(color = "#1a1a1a", 
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", 
                   family = "Inter, sans-serif",
                   size = 13)
     ),
@@ -153,9 +153,9 @@ plot_ly(age_all,
     title = list(text = "Kaikki ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
     showlegend = FALSE,
     hoverlabel = list(
-      bgcolor = "white",
-      bordercolor = "#1a1a1a",
-      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
                  tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
@@ -181,9 +181,9 @@ plot_ly(age_elected,
     title = list(text = "Valitut ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
     showlegend = FALSE,
     hoverlabel = list(
-      bgcolor = "white",
-      bordercolor = "#1a1a1a",
-      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
                  tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
@@ -205,11 +205,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    name = "Miehet",
     marker = list(color = "#5b6e7c"),
     hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
     hoverinfo = "text",
-    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
@@ -219,11 +218,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    name = "Naiset",
     marker = list(color = "#00BCD4"),
     hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
     hoverinfo = "text",
-    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
@@ -231,12 +229,11 @@ plot_ly() |>
     barmode = "stack",
     title = list(text = "Kaikki ehdokkaat",
                  font = list(family = "Inter, sans-serif", size = 14)),
-    showlegend = TRUE,
-    legend = list(font = list(family = "Inter, sans-serif", size = 13)),
+    showlegend = FALSE,
     hoverlabel = list(
-      bgcolor = "white",
-      bordercolor = "#1a1a1a",
-      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  showticklabels = FALSE, range = c(0, 100)),
@@ -256,11 +253,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    name = "Miehet",
     marker = list(color = "#5b6e7c"),
     hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
     hoverinfo = "text",
-    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
@@ -270,11 +266,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    name = "Naiset",
-    marker = list(color = "#00BCD4"),
+    marker = list(color = "#D81B60"),
     hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
     hoverinfo = "text",
-    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
@@ -282,12 +277,11 @@ plot_ly() |>
     barmode = "stack",
     title = list(text = "Valitut ehdokkaat",
                  font = list(family = "Inter, sans-serif", size = 14)),
-    showlegend = TRUE,
-    legend = list(font = list(family = "Inter, sans-serif", size = 13)),
+    showlegend = FALSE,
     hoverlabel = list(
-      bgcolor = "white",
-      bordercolor = "#1a1a1a",
-      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  showticklabels = FALSE, range = c(0, 100)),
@@ -296,3 +290,4 @@ plot_ly() |>
     plot_bgcolor = "white"
   )
 ```
+
