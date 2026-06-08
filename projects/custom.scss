@@ -4,6 +4,13 @@
 $navbar-bg: #1a1a1a;
 $navbar-fg: #ffffff;
 
+/*-- scss:rules --*/
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
 /* Typography */
 $font-family-base: "Outfit", sans-serif;
 $headings-font-family: "Outfit", sans-serif;
