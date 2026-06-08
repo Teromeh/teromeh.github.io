@@ -4,13 +4,6 @@
 $navbar-bg: #1a1a1a;
 $navbar-fg: #ffffff;
 
-/*-- scss:rules --*/
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
 /* Typography */
 $font-family-base: "Outfit", sans-serif;
 $headings-font-family: "Outfit", sans-serif;
@@ -27,3 +20,16 @@ $body-color: #1a1a1a;
 /* Card styling */
 $card-border-color: #e0e0e0;
 $card-border-radius: 8px;
+
+/*-- scss:rules --*/
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.quarto-dashboard-content {
+  padding-top: 56px;
+}
