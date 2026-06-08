@@ -19,6 +19,7 @@ library(plotly)
 library(dplyr)
 
 data <- readRDS("df.rds")
+elected <- readRDS("elected.rds")
 
 party_colors <- c(
   "SDP" = "#F54B4B",
@@ -54,6 +55,26 @@ age_elected <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
   filter(valintatieto == "Kyllä") |>
   count(ika_vaalipaivana, name = "maara")
+
+gender_all <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, sukupuoli) |>
+  count(sukupuoli, name = "maara") |>
+  mutate(
+    total = sum(maara),
+    percentage = (maara / total) * 100,
+    label = paste0(format(maara, big.mark = " "), " (",
+                   format(round(percentage, 1), decimal.mark = ","), " %)")
+  )
+
+gender_elected <- elected |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, sukupuoli) |>
+  count(sukupuoli, name = "maara") |>
+  mutate(
+    total = sum(maara),
+    percentage = (maara / total) * 100,
+    label = paste0(format(maara, big.mark = " "), " (",
+                   format(round(percentage, 1), decimal.mark = ","), " %)")
+  )
 ```
 
 ## Row
@@ -168,6 +189,109 @@ plot_ly(age_elected,
                  tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
     yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  )
+```
+## Row
+
+### Column
+
+```{r}
+plot_ly() |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    name = "Miehet",
+    marker = list(color = "#5b6e7c"),
+    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
+    hoverinfo = "text",
+    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    name = "Naiset",
+    marker = list(color = "#00BCD4"),
+    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
+    hoverinfo = "text",
+    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "Kaikki ehdokkaat",
+                 font = list(family = "Inter, sans-serif", size = 14)),
+    showlegend = TRUE,
+    legend = list(font = list(family = "Inter, sans-serif", size = 13)),
+    hoverlabel = list(
+      bgcolor = "white",
+      bordercolor = "#1a1a1a",
+      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  )
+```
+
+### Column
+
+```{r}
+plot_ly() |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    name = "Miehet",
+    marker = list(color = "#5b6e7c"),
+    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
+    hoverinfo = "text",
+    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    name = "Naiset",
+    marker = list(color = "#00BCD4"),
+    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
+    hoverinfo = "text",
+    text = ~paste0("<b>", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "Valitut ehdokkaat",
+                 font = list(family = "Inter, sans-serif", size = 14)),
+    showlegend = TRUE,
+    legend = list(font = list(family = "Inter, sans-serif", size = 13)),
+    hoverlabel = list(
+      bgcolor = "white",
+      bordercolor = "#1a1a1a",
+      font = list(color = "#1a1a1a", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   )
