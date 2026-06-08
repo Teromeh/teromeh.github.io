@@ -3,6 +3,7 @@ title: "Kuntavaalit 2025"
 format: 
   dashboard:
     theme: [litera, custom.scss]
+    scrolling: true
     include-in-header:
       text: |
         <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -51,9 +52,8 @@ age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
   count(ika_vaalipaivana, name = "maara")
 
-age_elected <- data |>
+age_elected <- elected |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
-  filter(valintatieto == "Kyllä") |>
   count(ika_vaalipaivana, name = "maara")
 
 gender_all <- data |>
