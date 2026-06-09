@@ -79,6 +79,16 @@ gender_elected <- elected |>
     label = paste0(format(maara, big.mark = " "), " (",
                    format(round(percentage, 1), decimal.mark = ","), " %)")
   )
+
+avg_age_all <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
+  pull(avg)
+
+avg_age_elected <- elected |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
+  pull(avg)
 ```
 
 ## Row
@@ -153,6 +163,13 @@ plot_ly(age_all,
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Ehdokkaita: ", maara),
         hoverinfo = "text") |>
+  add_segments(
+    x = avg_age_all, xend = avg_age_all,
+    y = 0, yend = max(age_all$maara),
+    line = list(color = "#1a1a1a", width = 1.5, dash = "dot"),
+    hoverinfo = "none",
+    showlegend = FALSE
+  ) |>
   layout(
     title = list(text = "Kaikki ehdokkaat", font = title_font),
     showlegend = FALSE,
@@ -166,7 +183,19 @@ plot_ly(age_all,
     yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    plot_bgcolor = "white",
+    annotations = list(
+      list(
+        x = avg_age_all,
+        y = max(age_all$maara),
+        text = paste0("<b>Keskiarvo: ", format(avg_age_all, decimal.mark = ","), " v</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 12,
+                    family = "Inter, sans-serif")
+      )
+    )
   )
 ```
 
@@ -181,6 +210,13 @@ plot_ly(age_elected,
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Valittuja: ", maara),
         hoverinfo = "text") |>
+  add_segments(
+    x = avg_age_elected, xend = avg_age_elected,
+    y = 0, yend = max(age_elected$maara),
+    line = list(color = "#1a1a1a", width = 1.5, dash = "dot"),
+    hoverinfo = "none",
+    showlegend = FALSE
+  ) |>
   layout(
     title = list(text = "Valitut ehdokkaat", font = title_font),
     showlegend = FALSE,
@@ -194,9 +230,22 @@ plot_ly(age_elected,
     yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    plot_bgcolor = "white",
+    annotations = list(
+      list(
+        x = avg_age_elected,
+        y = max(age_elected$maara),
+        text = paste0("<b>Keskiarvo: ", format(avg_age_elected, decimal.mark = ","), " v</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 12,
+                    family = "Inter, sans-serif")
+      )
+    )
   )
 ```
+
 ## Row
 
 ### Column
