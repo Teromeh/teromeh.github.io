@@ -107,7 +107,8 @@ header, .projects, footer {
 .card-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 10px; /* breathing room */
 }
 
 .card-text {
