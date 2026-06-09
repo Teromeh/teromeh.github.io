@@ -171,7 +171,7 @@ plot_ly(age_all,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Kaikki ehdokkaat", font = title_font),
+    title = list(text = "Ikäjakauma - Kaikki ehdokkaat", font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -188,7 +188,7 @@ plot_ly(age_all,
       list(
         x = avg_age_all,
         y = max(age_all$maara),
-        text = paste0("<b>Keskiarvo: ", format(avg_age_all, decimal.mark = ","), " v</b>"),
+        text = paste0("<b>Keskiarvo: ", format(avg_age_all, decimal.mark = ","), " vuotta</b>"),
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
@@ -218,7 +218,7 @@ plot_ly(age_elected,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Valitut ehdokkaat", font = title_font),
+    title = list(text = "Ikäjakauma - valitut ehdokkaat", font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -235,7 +235,7 @@ plot_ly(age_elected,
       list(
         x = avg_age_elected,
         y = max(age_elected$maara),
-        text = paste0("<b>Keskiarvo: ", format(avg_age_elected, decimal.mark = ","), " v</b>"),
+        text = paste0("<b>Keskiarvo: ", format(avg_age_elected, decimal.mark = ","), " vuotta</b>"),
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
@@ -259,7 +259,7 @@ plot_ly() |>
     type = "bar",
     orientation = "h",
     marker = list(color = "#5b6e7c"),
-    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
+    hovertext = ~paste0("M: ", format(round(percentage, 1), decimal.mark = ","), " %"),
     hoverinfo = "text",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
@@ -282,7 +282,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "Kaikki ehdokkaat",
+    title = list(text = "Sukupuolijakauma - Kaikki ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
@@ -332,7 +332,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "Valitut ehdokkaat",
+    title = list(text = "Sukupuolijakauma - Valitut ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
