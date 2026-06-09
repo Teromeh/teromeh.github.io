@@ -35,6 +35,8 @@ party_colors <- c(
   "Muut" = "#000000"
 )
 
+title_font <- list(family = "Outfit, sans-serif", size = 14)
+
 party_data <- data |>
   group_by(puolueen_ryhman_nimilyhenne_suomeksi) |>
   summarise(total_votes = sum(aanet_yhteensa_lkm, na.rm = TRUE), .groups = "drop") |>
@@ -150,7 +152,7 @@ plot_ly(age_all,
                             "Ehdokkaita: ", maara),
         hoverinfo = "text") |>
   layout(
-    title = list(text = "Kaikki ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
+    title = list(text = "Kaikki ehdokkaat", font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -178,7 +180,7 @@ plot_ly(age_elected,
                             "Valittuja: ", maara),
         hoverinfo = "text") |>
   layout(
-    title = list(text = "Valitut ehdokkaat", font = list(family = "Inter, sans-serif", size = 14)),
+    title = list(text = "Valitut ehdokkaat", font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -210,6 +212,7 @@ plot_ly() |>
     hoverinfo = "text",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
+    insidetextanchor = "middle",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
   add_trace(
@@ -223,12 +226,13 @@ plot_ly() |>
     hoverinfo = "text",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
+    insidetextanchor = "middle",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
   layout(
     barmode = "stack",
     title = list(text = "Kaikki ehdokkaat",
-                 font = list(family = "Inter, sans-serif", size = 14)),
+                 font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -258,6 +262,7 @@ plot_ly() |>
     hoverinfo = "text",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
+    insidetextanchor = "middle",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
   add_trace(
@@ -271,12 +276,13 @@ plot_ly() |>
     hoverinfo = "text",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
+    insidetextanchor = "middle",
     insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
   ) |>
   layout(
     barmode = "stack",
     title = list(text = "Valitut ehdokkaat",
-                 font = list(family = "Inter, sans-serif", size = 14)),
+                 font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
