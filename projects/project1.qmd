@@ -250,7 +250,7 @@ plot_ly(age_elected,
   )
 ```
 
-## Row
+## Row {height="180px"}
 
 ### Column
 
@@ -287,7 +287,6 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    height = 150,
     title = list(text = "Sukupuolijakauma - Kaikki ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
@@ -339,7 +338,6 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    height = 150,
     title = list(text = "Sukupuolijakauma - Valitut ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
