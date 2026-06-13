@@ -31,5 +31,12 @@ $card-border-radius: 8px;
 }
 
 .quarto-dashboard-content {
-  padding-top: 56px;
+  padding-top: 80px;
 }
+
+.quarto-dashboard .card:first-child {
+  margin-top: 1rem;
+}
+
+
+
