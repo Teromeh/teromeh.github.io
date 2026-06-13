@@ -38,7 +38,7 @@ party_colors <- c(
   "Muut" = "#000000"
 )
 
-title_font <- list(family = "Outfit, sans-serif", size = 14)
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 
 party_data <- data |>
   group_by(puolueen_ryhman_nimilyhenne_suomeksi) |>
@@ -119,7 +119,7 @@ plot_ly(party_data,
                     format(total_votes, big.mark = " ")),
         hoverinfo = "text") |>
   layout(
-    title = list(text = "Äänijakauma - Puolueet", font = title_font, x = 0),
+    title = list(text = "<b>Äänijakauma - Puolueet</b>", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -183,7 +183,7 @@ plot_ly(age_all,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Ikäjakauma - Kaikki ehdokkaat", font = title_font, x = 0),
+    title = list(text = "<b>Ikäjakauma - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -231,7 +231,7 @@ plot_ly(age_elected,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Ikäjakauma - valitut ehdokkaat", font = title_font, x = 0),
+    title = list(text = "<b>Ikäjakauma - Valitut ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -273,8 +273,7 @@ plot_ly() |>
     type = "bar",
     orientation = "h",
     marker = list(color = "#5b6e7c"),
-    hovertext = ~paste0("M: ", format(round(percentage, 1), decimal.mark = ","), " %"),
-    hoverinfo = "text",
+    hoverinfo = "none",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -287,8 +286,7 @@ plot_ly() |>
     type = "bar",
     orientation = "h",
     marker = list(color = "#00BCD4"),
-    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
-    hoverinfo = "text",
+    hoverinfo = "none",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -296,7 +294,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "Sukupuolijakauma - Kaikki ehdokkaat",
+    title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
@@ -324,8 +322,7 @@ plot_ly() |>
     type = "bar",
     orientation = "h",
     marker = list(color = "#5b6e7c"),
-    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %"),
-    hoverinfo = "text",
+    hoverinfo = "none",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -338,8 +335,7 @@ plot_ly() |>
     type = "bar",
     orientation = "h",
     marker = list(color = "#D81B60"),
-    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %"),
-    hoverinfo = "text",
+    hoverinfo = "none",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -347,7 +343,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "Sukupuolijakauma - Valitut ehdokkaat",
+    title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
@@ -378,7 +374,7 @@ plot_ly(occupation_all,
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " ehdokasta"),
         hoverinfo = "text") |>
   layout(
-    title = list(text = "Yleisimmät ammatit - Kaikki ehdokkaat", font = title_font, x = 0),
+    title = list(text = "<b>Yleisimmät ammatit - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -418,6 +414,6 @@ plot_ly(occupation_all,
 #| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #999999; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Lähde: Oikeusministeriö, Tieto- ja tulospalvelu
+Data: Oikeusministeriö, Tieto- ja tulospalvelu
 </p>')
 ```
