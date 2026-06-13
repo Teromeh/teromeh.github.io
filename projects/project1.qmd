@@ -17,6 +17,7 @@ format:
 ---
 
 ```{r}
+#| label: setup
 #| include: false
 library(plotly)
 library(dplyr)
@@ -80,6 +81,14 @@ gender_elected <- elected |>
                    format(round(percentage, 1), decimal.mark = ","), " %)")
   )
 
+occupation_all <- data |>
+  filter(!is.na(ammatti), ammatti != "") |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
+  count(ammatti, name = "maara") |>
+  arrange(desc(maara)) |>
+  head(10) |>
+  mutate(label = format(maara, big.mark = " "))
+
 avg_age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
   summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
@@ -110,7 +119,7 @@ plot_ly(party_data,
                     format(total_votes, big.mark = " ")),
         hoverinfo = "text") |>
   layout(
-    title = list(text = "Äänijakauma - Puolueet", font = title_font),
+    title = list(text = "Äänijakauma - Puolueet", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -174,7 +183,7 @@ plot_ly(age_all,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Ikäjakauma - Kaikki ehdokkaat", font = title_font),
+    title = list(text = "Ikäjakauma - Kaikki ehdokkaat", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -222,7 +231,7 @@ plot_ly(age_elected,
     showlegend = FALSE
   ) |>
   layout(
-    title = list(text = "Ikäjakauma - valitut ehdokkaat", font = title_font),
+    title = list(text = "Ikäjakauma - valitut ehdokkaat", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -288,7 +297,7 @@ plot_ly() |>
   layout(
     barmode = "stack",
     title = list(text = "Sukupuolijakauma - Kaikki ehdokkaat",
-                 font = title_font),
+                 font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -339,7 +348,7 @@ plot_ly() |>
   layout(
     barmode = "stack",
     title = list(text = "Sukupuolijakauma - Valitut ehdokkaat",
-                 font = title_font),
+                 font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -353,6 +362,55 @@ plot_ly() |>
     plot_bgcolor = "white"
   )
 ```
+
+## Row
+
+### Column
+
+```{r}
+#| label: occupation-all
+plot_ly(occupation_all,
+        x = ~maara,
+        y = ~reorder(ammatti, maara),
+        type = "bar",
+        orientation = "h",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " ehdokasta"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "Yleisimmät ammatit - Kaikki ehdokkaat", font = title_font, x = 0),
+    showlegend = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showline = FALSE, showticklabels = FALSE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE,
+                 ticklabelposition = "outside",
+                 ticklen = 10,
+                 tickcolor = "white",
+                 tickfont = list(color = "#1a1a1a", size = 13,
+                                 family = "Inter, sans-serif")),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white",
+    annotations = lapply(1:nrow(occupation_all), function(i) {
+      list(
+        x = occupation_all$maara[i],
+        y = occupation_all$ammatti[i],
+        text = paste0("<b>", occupation_all$label[i], "</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 13,
+                    family = "Inter, sans-serif")
+      )
+    })
+  )
+```
+
 
 ## Row
 
