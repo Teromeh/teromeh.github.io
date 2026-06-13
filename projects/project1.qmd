@@ -96,6 +96,7 @@ avg_age_elected <- elected |>
 ### Column
 
 ```{r}
+#| label: party-chart
 plot_ly(party_data,
         x = ~percentage,
         y = ~reorder(party_bold, percentage),
@@ -109,6 +110,7 @@ plot_ly(party_data,
                     format(total_votes, big.mark = " ")),
         hoverinfo = "text") |>
   layout(
+    title = list(text = "Äänijakauma - Puolueet", font = title_font),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -155,6 +157,7 @@ plot_ly(party_data,
 ### Column
 
 ```{r}
+#| label: age-all
 plot_ly(age_all,
         x = ~ika_vaalipaivana,
         y = ~maara,
@@ -202,6 +205,7 @@ plot_ly(age_all,
 ### Column
 
 ```{r}
+#| label: age-elected
 plot_ly(age_elected,
         x = ~ika_vaalipaivana,
         y = ~maara,
@@ -251,6 +255,7 @@ plot_ly(age_elected,
 ### Column
 
 ```{r}
+#| label: gender-all
 plot_ly() |>
   add_trace(
     data = gender_all |> filter(sukupuoli == "Mies"),
@@ -282,6 +287,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
+    height = 150,
     title = list(text = "Sukupuolijakauma - Kaikki ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
@@ -301,6 +307,7 @@ plot_ly() |>
 ### Column
 
 ```{r}
+#| label: gender-elected
 plot_ly() |>
   add_trace(
     data = gender_elected |> filter(sukupuoli == "Mies"),
@@ -332,6 +339,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
+    height = 150,
     title = list(text = "Sukupuolijakauma - Valitut ehdokkaat",
                  font = title_font),
     showlegend = FALSE,
@@ -351,6 +359,7 @@ plot_ly() |>
 ## Row
 
 ```{r}
+#| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #999999; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
 Lähde: Oikeusministeriö, Tieto- ja tulospalvelu
