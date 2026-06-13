@@ -156,9 +156,10 @@ plot_ly(party_data,
         xshift = 5,
         font = list(color = "#1a1a1a", size = 13, 
                     family = "Inter, sans-serif")
-      )
+      ) 
     })
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ## Row
@@ -208,7 +209,8 @@ plot_ly(age_all,
                     family = "Inter, sans-serif")
       )
     )
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ### Column
@@ -256,7 +258,8 @@ plot_ly(age_elected,
                     family = "Inter, sans-serif")
       )
     )
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ## Row {height="180px"}
@@ -307,7 +310,8 @@ plot_ly() |>
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ### Column
@@ -356,7 +360,8 @@ plot_ly() |>
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ## Row
@@ -404,7 +409,8 @@ plot_ly(occupation_all,
                     family = "Inter, sans-serif")
       )
     })
-  )
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 
