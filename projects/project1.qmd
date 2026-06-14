@@ -19,6 +19,7 @@ format:
 ```{r}
 #| label: setup
 #| include: false
+#| cache: true
 library(plotly)
 library(dplyr)
 
@@ -204,7 +205,7 @@ plot_ly(age_all,
       list(
         x = max(age_all$ika_vaalipaivana),
         y = max(age_all$maara),
-        text = paste0("<b>Keskiarvo: ", format(avg_age_all, decimal.mark = ","), " vuotta</b>"),
+        text = paste0("Keskiarvo: <b>", format(avg_age_all, decimal.mark = ","), "</b>"),
         showarrow = FALSE,
         xanchor = "right",
         font = list(color = "#1a1a1a", size = 12,
@@ -245,7 +246,7 @@ plot_ly(age_elected,
       list(
         x = max(age_elected$ika_vaalipaivana),
         y = max(age_elected$maara),
-        text = paste0("<b>Keskiarvo: ", format(avg_age_elected, decimal.mark = ","), " vuotta</b>"),
+        text = paste0("Keskiarvo: <b>", format(avg_age_elected, decimal.mark = ","), "</b>"),
         showarrow = FALSE,
         xanchor = "right",
         font = list(color = "#1a1a1a", size = 12,
