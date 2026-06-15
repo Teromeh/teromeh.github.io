@@ -38,5 +38,21 @@ $card-border-radius: 8px;
   margin-top: 1rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+  }
 
+  .quarto-dashboard {
+    background-color: #1a1a1a;
+  }
 
+  .card {
+    background-color: #242424;
+    border-color: #333333;
+  }
+
+  .card-body {
+    background-color: #242424;
+  }
+}
