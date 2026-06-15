@@ -156,3 +156,41 @@ footer {
 @media (max-width: 560px) {
   .grid { grid-template-columns: 1fr; }
 }
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  header, footer {
+    border-color: #333333;
+  }
+
+  .card {
+    border-color: #333333;
+    background-color: #242424;
+  }
+
+  .card-text h3, .card-text p {
+    color: #ffffff;
+  }
+
+  .logo-name {
+    color: #ffffff;
+  }
+
+  .btn-contact {
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+
+  .btn-contact:hover {
+    background-color: #ffffff;
+    color: #1a1a1a;
+  }
+
+  .card-img {
+    background-color: #333333;
+  }
+}
