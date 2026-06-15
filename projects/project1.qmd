@@ -2,7 +2,9 @@
 title: "Kuntavaalit 2025"
 format: 
   dashboard:
-    theme: [litera, custom.scss]
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
     scrolling: true
     include-in-header:
       text: |
