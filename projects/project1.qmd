@@ -132,6 +132,7 @@ plot_ly(party_data,
   layout(
     title = list(text = "<b>Äänijakauma - Puolueet</b>", font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -190,6 +191,7 @@ plot_ly(age_all,
   layout(
     title = list(text = "<b>Ikäjakauma - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -231,6 +233,7 @@ plot_ly(age_elected,
   layout(
     title = list(text = "<b>Ikäjakauma - Valitut ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -295,6 +298,7 @@ plot_ly() |>
     title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -345,6 +349,7 @@ plot_ly() |>
     title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -376,6 +381,7 @@ plot_ly(occupation_all,
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -425,6 +431,7 @@ plot_ly(occupation_elected,
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Valitut ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
+    dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
