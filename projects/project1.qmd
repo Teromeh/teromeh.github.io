@@ -19,7 +19,6 @@ format:
 ```{r}
 #| label: setup
 #| include: false
-#| cache: true
 library(plotly)
 library(dplyr)
 
@@ -48,11 +47,9 @@ party_data <- data |>
   arrange(desc(total_votes)) |>
   head(10) |>
   mutate(
-    label = paste0(format(round(percentage, 1), decimal.mark = ","), " %")
+    label = paste0(format(round(percentage, 1), decimal.mark = ","), " %"),
+    party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>")
   )
-
-party_data <- party_data |>
-  mutate(party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>"))
 
 age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
@@ -153,8 +150,8 @@ plot_ly(party_data,
              ticklen = 10,
              tickcolor = "white",
              tickfont = list(color = "#1a1a1a", size = 14, 
-                             family = "Inter, sans-serif",
-                             weight = "bold")),
+                             family = "Inter, sans-serif")
+             ),
     paper_bgcolor = "white",
     plot_bgcolor = "white",
     annotations = lapply(1:nrow(party_data), function(i) {
