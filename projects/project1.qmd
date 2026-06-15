@@ -154,8 +154,8 @@ plot_ly(party_data,
              tickfont = list(color = "#1a1a1a", size = 14, 
                              family = "Inter, sans-serif")
              ),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white",
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
     annotations = lapply(1:nrow(party_data), function(i) {
       list(
         x = party_data$percentage[i],
@@ -198,8 +198,8 @@ plot_ly(age_all,
                  tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
     yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white",
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
     annotations = list(
       list(
         x = max(age_all$ika_vaalipaivana),
@@ -239,8 +239,8 @@ plot_ly(age_elected,
                  tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
     yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white",
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
     annotations = list(
       list(
         x = max(age_elected$ika_vaalipaivana),
@@ -302,8 +302,8 @@ plot_ly() |>
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  showticklabels = FALSE, range = c(0, 100)),
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
 ```
@@ -352,8 +352,8 @@ plot_ly() |>
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  showticklabels = FALSE, range = c(0, 100)),
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
 ```
@@ -389,8 +389,8 @@ plot_ly(occupation_all,
                  tickcolor = "white",
                  tickfont = list(color = "#1a1a1a", size = 13,
                                  family = "Inter, sans-serif")),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white",
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
     annotations = lapply(1:nrow(occupation_all), function(i) {
       list(
         x = occupation_all$maara[i],
@@ -438,8 +438,8 @@ plot_ly(occupation_elected,
                  tickcolor = "white",
                  tickfont = list(color = "#1a1a1a", size = 13,
                                  family = "Inter, sans-serif")),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white",
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
     annotations = lapply(1:nrow(occupation_elected), function(i) {
       list(
         x = occupation_elected$maara[i],
