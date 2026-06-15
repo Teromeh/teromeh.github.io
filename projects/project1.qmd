@@ -1,5 +1,6 @@
 ---
 title: "Kuntavaalit 2025"
+page-layout: full
 format: 
   dashboard:
     theme:
