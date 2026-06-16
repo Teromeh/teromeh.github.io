@@ -110,40 +110,6 @@ avg_age_elected <- elected |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
   summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
   pull(avg)
-
-candidates_table <- data |>
-  group_by(
-    ehdokasnumero,
-    kotikunnan_nimi_suomeksi,
-    henkilon_etunimi,
-    henkilon_sukunimi,
-    puolueen_ryhman_nimilyhenne_suomeksi,
-    sukupuoli,
-    ika_vaalipaivana,
-    ammatti,
-    valintatieto
-  ) |>
-  summarise(
-    `Äänet yhteensä` = sum(aanet_yhteensa_lkm, na.rm = TRUE),
-    .groups = "drop"
-  ) |>
-  select(
-    Etunimi = henkilon_etunimi,
-    Sukunimi = henkilon_sukunimi,
-    Puolue = puolueen_ryhman_nimilyhenne_suomeksi,
-    Sukupuoli = sukupuoli,
-    Ikä = ika_vaalipaivana,
-    Kunta = kotikunnan_nimi_suomeksi,
-    Ammatti = ammatti,
-    `Äänet yhteensä`,
-    Valittu = valintatieto
-  ) |>
-  mutate(
-    Ammatti = trimws(Ammatti),
-    Etunimi = trimws(Etunimi),
-    Sukunimi = trimws(Sukunimi)
-  ) |>
-  arrange(desc(`Äänet yhteensä`))
 ```
 
 ## Row
@@ -497,32 +463,6 @@ plot_ly(occupation_elected,
     })
   ) |>
   config(displayModeBar = FALSE)
-```
-
-## Row
-
-```{r}
-#| label: candidates-table
-datatable(candidates_table,
-          filter = "top",
-          style = "bootstrap5",
-          options = list(
-            pageLength = 25,
-            scrollX = TRUE,
-            autoWidth = TRUE,
-            initComplete = JS("function(settings, json) {
-              $(this.api().table().node()).css('font-size', '12px');
-            }"),
-            language = list(
-              search = "Haku:",
-              lengthMenu = "Näytä _MENU_ riviä",
-              info = "Näytetään _START_-_END_ / _TOTAL_ ehdokasta",
-              paginate = list(previous = "Edellinen", `next` = "Seuraava")
-            )
-          ),
-          rownames = FALSE) |>
-  formatCurrency(c("Äänet yhteensä"),
-                 currency = "", digits = 0, mark = " ")
 ```
 
 ## Row
