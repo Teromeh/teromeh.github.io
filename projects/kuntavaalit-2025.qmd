@@ -14,7 +14,7 @@ format:
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
-      - icon: house
+      - icon: house-door
         href: ../index.html
 ---
 
