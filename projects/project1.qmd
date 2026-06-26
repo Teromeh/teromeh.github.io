@@ -23,8 +23,6 @@ format:
 #| include: false
 library(plotly)
 library(dplyr)
-library(DT)
-library(htmlwidgets)
 
 data <- readRDS("df.rds")
 elected <- readRDS("elected.rds")
@@ -274,7 +272,7 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#5b6e7c"),
+    marker = list(color = "#2E2E2E"),
     hoverinfo = "none",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
@@ -325,7 +323,7 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#5b6e7c"),
+    marker = list(color = "#2E2E2E"),
     hoverinfo = "none",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
