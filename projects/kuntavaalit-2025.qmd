@@ -248,7 +248,7 @@ plot_ly(age_elected,
       list(
         x = max(age_elected$ika_vaalipaivana),
         y = max(age_elected$maara),
-        text = paste0("Keskiarvo: <b>", format(avg_age_all, decimal.mark = ","), "</b> vuotta"),
+        text = paste0("Keskiarvo: <b>", format(avg_age_elected, decimal.mark = ","), "</b> vuotta"),
         showarrow = FALSE,
         xanchor = "right",
         font = list(color = "#1a1a1a", size = 12,
