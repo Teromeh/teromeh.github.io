@@ -15,7 +15,7 @@ format:
       - icon: envelope
         href: mailto:teromeh@proton.me
       - icon: house-door
-        href: ../index.html
+        href: ../
 ---
 
 ```{r}
