@@ -1,25 +1,83 @@
 ---
-title: "workout-history.qmd"
-format: html
+title: "Workout data"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house
+        href: ../
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-1 + 1
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+
+data <- read.csv("user202919653_workout_history.csv")
+
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+activity_counts <- data |>
+  count(Activity.Type, name = "maara") |>
+  arrange(desc(maara))
 ```
 
-You can add options to executable code like this 
+## Row
+
+### Column
 
 ```{r}
-#| echo: false
-2 * 2
+#| label: activity-types
+plot_ly(activity_counts,
+        x = ~maara,
+        y = ~reorder(Activity.Type, maara),
+        type = "bar",
+        orientation = "h",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0(Activity.Type, ": ", maara, " kertaa"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Harjoitukset lajeittain</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showline = FALSE, showticklabels = FALSE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE,
+                 ticklabelposition = "outside",
+                 ticklen = 10,
+                 tickcolor = "rgba(0,0,0,0)",
+                 tickfont = list(color = "#1a1a1a", size = 13,
+                                 family = "Inter, sans-serif")),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white",
+    annotations = lapply(1:nrow(activity_counts), function(i) {
+      list(
+        x = activity_counts$maara[i],
+        y = activity_counts$Activity.Type[i],
+        text = paste0("<b>", activity_counts$maara[i], "</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 13, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
 ```
-
-The `echo: false` option disables the printing of code (only output is displayed).
