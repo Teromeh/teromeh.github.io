@@ -31,6 +31,10 @@ title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 activity_counts <- data |>
   count(activity_type, name = "maara") |>
   mutate(percentage = round(maara / sum(maara) * 100, 1))
+
+distance_counts <- data |>
+  count(distance_class, name = "maara") |>
+  mutate(percentage = round(maara / sum(maara) * 100, 1))
 ```
 
 ## Row
@@ -51,6 +55,35 @@ plot_ly(activity_counts,
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Activity Types</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+## Row
+
+### Column
+
+```{r}
+#| label: distance-classes
+plot_ly(distance_counts,
+        labels = ~distance_class,
+        values = ~maara,
+        type = "pie",
+        hole = 0.6,
+        marker = list(colors = c("#00BCD4", "#0097A7", "#D81B60", "#AD1457")),
+        textinfo = "label+percent",
+        textfont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+        hovertext = ~paste0(distance_class, ": ", maara, " workouts"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Distance Distribution</b>", font = title_font, x = 0),
     showlegend = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
