@@ -14,7 +14,7 @@ format:
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
-      - icon: house
+      - icon: house-door
         href: ../
 ---
 
@@ -24,7 +24,7 @@ format:
 library(plotly)
 library(dplyr)
 
-data <- read.csv("user202919653_workout_history.csv")
+data <- readRDS("workout-history.rds")
 
 title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 
