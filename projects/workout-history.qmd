@@ -23,6 +23,7 @@ format:
 #| include: false
 library(plotly)
 library(dplyr)
+library(lubridate)
 
 data <- readRDS("workout-history.rds")
 
@@ -39,9 +40,9 @@ distance_counts <- data |>
          display_label = paste0("<b>", distance_class, "<br>", percentage, "%</b>"))
 
 monthly_distance <- data |>
-  mutate(month = format(workout_date, "%Y-%m")) |>
+  mutate(month = floor_date(workout_date, "month")) |>
   group_by(month) |>
-  summarise(total_km = round(sum(distance_km, na.rm = TRUE), 1), .groups = "drop") |>
+  summarise(total_km = round(sum(distance_km, na.rm = TRUE), 0), .groups = "drop") |>
   arrange(month)
 ```
 
@@ -144,8 +145,10 @@ plot_ly(monthly_distance,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 12),
-                 tickangle = -45),
+             type = "date",
+             tickformat = "%b %Y",
+             tickfont = list(family = "Inter, sans-serif", size = 12),
+             tickangle = -45),
     yaxis = list(title = "Distance (km)", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
