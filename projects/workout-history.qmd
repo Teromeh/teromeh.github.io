@@ -30,11 +30,13 @@ title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 
 activity_counts <- data |>
   count(activity_type, name = "maara") |>
-  mutate(percentage = round(maara / sum(maara) * 100, 1))
+  mutate(percentage = round(maara / sum(maara) * 100, 0),
+         display_label = paste0("<b>", activity_type, "<br>", percentage, "%</b>"))
 
 distance_counts <- data |>
   count(distance_class, name = "maara") |>
-  mutate(percentage = round(maara / sum(maara) * 100, 1))
+  mutate(percentage = round(maara / sum(maara) * 100, 0),
+         display_label = paste0("<b>", distance_class, "<br>", percentage, "%</b>"))
 ```
 
 ## Row
@@ -48,14 +50,23 @@ plot_ly(activity_counts,
         values = ~maara,
         type = "pie",
         hole = 0.6,
-        marker = list(colors = c("#00BCD4", "#D81B60")),
-        textinfo = "label+percent",
-        textfont = list(family = "Inter, sans-serif", size = 14, color = "#1a1a1a"),
+        marker = list(colors = c("#2E2E2E", "#D81B60")),
+        text = ~paste0("<b>", percentage, "%</b>"),
+        textinfo = "text",
+        textfont = list(family = "Inter, sans-serif", size = 14, color = "#ffffff"),
         hovertext = ~paste0(activity_type, ": ", maara, " workouts"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Activity Types</b>", font = title_font, x = 0),
-    showlegend = FALSE,
+    showlegend = TRUE,
+    legend = list(
+      orientation = "v",
+      x = 0,
+      y = 0.85,
+      xanchor = "left",
+      font = list(family = "Inter, sans-serif", size = 13),
+      title = list(text = "<b>Activity</b>", font = list(family = "Inter, sans-serif", size = 13))
+    ),
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
@@ -78,13 +89,22 @@ plot_ly(distance_counts,
         type = "pie",
         hole = 0.6,
         marker = list(colors = c("#00BCD4", "#0097A7", "#D81B60", "#AD1457")),
-        textinfo = "label+percent",
-        textfont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+        text = ~paste0("<b>", percentage, "%</b>"),
+        textinfo = "text",
+        textfont = list(family = "Inter, sans-serif", size = 13, color = "#ffffff"),
         hovertext = ~paste0(distance_class, ": ", maara, " workouts"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Distance Distribution</b>", font = title_font, x = 0),
-    showlegend = FALSE,
+    showlegend = TRUE,
+    legend = list(
+      orientation = "v",
+      x = 0,
+      y = 0.85,
+      xanchor = "left",
+      font = list(family = "Inter, sans-serif", size = 13),
+      title = list(text = "<b>Distance</b>", font = list(family = "Inter, sans-serif", size = 13))
+    ),
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
