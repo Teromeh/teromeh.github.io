@@ -37,6 +37,12 @@ distance_counts <- data |>
   count(distance_class, name = "maara") |>
   mutate(percentage = round(maara / sum(maara) * 100, 0),
          display_label = paste0("<b>", distance_class, "<br>", percentage, "%</b>"))
+
+monthly_distance <- data |>
+  mutate(month = format(workout_date, "%Y-%m")) |>
+  group_by(month) |>
+  summarise(total_km = round(sum(distance_km, na.rm = TRUE), 1), .groups = "drop") |>
+  arrange(month)
 ```
 
 ## Row
@@ -110,6 +116,38 @@ plot_ly(distance_counts,
       bordercolor = "#333333",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+## Row
+
+### Column
+
+```{r}
+#| label: distance-over-time
+plot_ly(monthly_distance,
+        x = ~month,
+        y = ~total_km,
+        type = "bar",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0(month, ": ", total_km, " km"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Distance by Month</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12),
+                 tickangle = -45),
+    yaxis = list(title = "Distance (km)", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
