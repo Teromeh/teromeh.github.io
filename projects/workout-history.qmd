@@ -135,8 +135,6 @@ plot_ly(
   config(displayModeBar = FALSE)
 ```
 
-## Row
-
 ### Column
 
 ```{r}
@@ -234,7 +232,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "<b>Distance by Month</b>", font = title_font, x = 0),
+    title = list(text = "<b>Distance by Month (km)</b>", font = title_font, x = 0),
     showlegend = TRUE,
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
@@ -248,7 +246,7 @@ plot_ly() |>
                  tickformat = "%b %Y",
                  tickfont = list(family = "Inter, sans-serif", size = 12),
                  tickangle = -45),
-    yaxis = list(title = "Distance (km)", showgrid = FALSE, showline = FALSE,
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
