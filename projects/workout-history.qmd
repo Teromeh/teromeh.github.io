@@ -58,7 +58,7 @@ activity_by_year <- lapply(years, function(yr) {
            total = sum(maara))
 })
 
-distance_colors <- c("0-5 km" = "#00BCD4", "5-10 km" = "#0097A7", 
+distance_colors <- c("0-5 km" = "#2E2E2E", "5-10 km" = "#0097A7", 
                       "10-15 km" = "#D81B60", "15+ km" = "#AD1457")
 
 distance_by_year <- lapply(years, function(yr) {
