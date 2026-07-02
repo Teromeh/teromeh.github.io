@@ -1,5 +1,5 @@
 ---
-title: "Workout data"
+title: "My workout data"
 format: 
   dashboard:
     theme:
@@ -41,9 +41,31 @@ distance_counts <- data |>
 
 monthly_distance <- data |>
   mutate(month = floor_date(workout_date, "month")) |>
-  group_by(month) |>
+  group_by(month, activity_type) |>
   summarise(total_km = round(sum(distance_km, na.rm = TRUE), 0), .groups = "drop") |>
-  arrange(month)
+  arrange(month) |>
+  mutate(month_label = paste0(month.abb[as.integer(format(month, "%m"))], " ", format(month, "%Y")))
+
+years <- c("All", sort(unique(format(data$workout_date, "%Y")), decreasing = TRUE))
+
+activity_colors <- c("Walk" = "#2E2E2E", "Run" = "#D81B60")
+
+activity_by_year <- lapply(years, function(yr) {
+  d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
+  d |> count(activity_type, name = "maara") |>
+    mutate(percentage = round(maara / sum(maara) * 100, 0),
+           color = activity_colors[activity_type])
+})
+
+distance_colors <- c("0-5 km" = "#00BCD4", "5-10 km" = "#0097A7", 
+                      "10-15 km" = "#D81B60", "15+ km" = "#AD1457")
+
+distance_by_year <- lapply(years, function(yr) {
+  d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
+  d |> count(distance_class, name = "maara") |>
+    mutate(percentage = round(maara / sum(maara) * 100, 0),
+           color = distance_colors[distance_class])
+})
 ```
 
 ## Row
@@ -52,19 +74,47 @@ monthly_distance <- data |>
 
 ```{r}
 #| label: activity-types
-plot_ly(activity_counts,
-        labels = ~activity_type,
-        values = ~maara,
-        type = "pie",
-        hole = 0.6,
-        marker = list(colors = c("#2E2E2E", "#D81B60")),
-        text = ~paste0("<b>", percentage, "%</b>"),
-        textinfo = "text",
-        textfont = list(family = "Inter, sans-serif", size = 16, color = "#ffffff"),
-        hovertext = ~paste0(activity_type, ": ", maara, " workouts"),
-        hoverinfo = "text") |>
+initial <- activity_by_year[[1]]
+
+buttons <- lapply(seq_along(years), function(i) {
+  d <- activity_by_year[[i]]
+  list(
+    method = "update",
+    args = list(
+      list(
+        labels = list(I(d$activity_type)),
+        values = list(I(d$maara)),
+        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
+        hovertext = list(I(paste0(d$activity_type, ": ", d$maara, " workouts"))),
+        marker = list(list(colors = I(d$color)))
+      )
+    ),
+    label = years[i]
+  )
+})
+
+plot_ly(
+  labels = initial$activity_type,
+  values = initial$maara,
+  type = "pie",
+  hole = 0.6,
+  marker = list(colors = initial$color),
+  text = paste0("<b>", initial$percentage, "%</b>"),
+  textinfo = "text",
+  textfont = list(family = "Inter, sans-serif", size = 16, color = "#ffffff"),
+  hovertext = paste0(initial$activity_type, ": ", initial$maara, " workouts"),
+  hoverinfo = "text"
+) |>
   layout(
     title = list(text = "<b>Activity Types</b>", font = title_font, x = 0),
+    updatemenus = list(list(
+      type = "dropdown",
+      buttons = buttons,
+      x = 1,
+      y = 1.2,
+      xanchor = "right",
+      font = list(family = "Inter, sans-serif", size = 12)
+    )),
     showlegend = TRUE,
     legend = list(
       orientation = "v",
@@ -84,25 +134,54 @@ plot_ly(activity_counts,
   ) |>
   config(displayModeBar = FALSE)
 ```
+
 ## Row
 
 ### Column
 
 ```{r}
 #| label: distance-classes
-plot_ly(distance_counts,
-        labels = ~distance_class,
-        values = ~maara,
-        type = "pie",
-        hole = 0.6,
-        marker = list(colors = c("#00BCD4", "#0097A7", "#D81B60", "#AD1457")),
-        text = ~paste0("<b>", percentage, "%</b>"),
-        textinfo = "text",
-        textfont = list(family = "Inter, sans-serif", size = 16, color = "#ffffff"),
-        hovertext = ~paste0(distance_class, ": ", maara, " workouts"),
-        hoverinfo = "text") |>
+initial_d <- distance_by_year[[1]]
+
+buttons_d <- lapply(seq_along(years), function(i) {
+  d <- distance_by_year[[i]]
+  list(
+    method = "update",
+    args = list(
+      list(
+        labels = list(I(d$distance_class)),
+        values = list(I(d$maara)),
+        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
+        hovertext = list(I(paste0(d$distance_class, ": ", d$maara, " workouts"))),
+        marker = list(list(colors = I(d$color)))
+      )
+    ),
+    label = years[i]
+  )
+})
+
+plot_ly(
+  labels = initial_d$distance_class,
+  values = initial_d$maara,
+  type = "pie",
+  hole = 0.6,
+  marker = list(colors = initial_d$color),
+  text = paste0("<b>", initial_d$percentage, "%</b>"),
+  textinfo = "text",
+  textfont = list(family = "Inter, sans-serif", size = 16, color = "#ffffff"),
+  hovertext = paste0(initial_d$distance_class, ": ", initial_d$maara, " workouts"),
+  hoverinfo = "text"
+) |>
   layout(
     title = list(text = "<b>Distance Distribution</b>", font = title_font, x = 0),
+    updatemenus = list(list(
+      type = "dropdown",
+      buttons = buttons_d,
+      x = 1,
+      y = 1.2,
+      xanchor = "right",
+      font = list(family = "Inter, sans-serif", size = 12)
+    )),
     showlegend = TRUE,
     legend = list(
       orientation = "v",
@@ -122,22 +201,42 @@ plot_ly(distance_counts,
   ) |>
   config(displayModeBar = FALSE)
 ```
+
 ## Row
 
 ### Column
 
 ```{r}
 #| label: distance-over-time
-plot_ly(monthly_distance,
-        x = ~month,
-        y = ~total_km,
-        type = "bar",
-        marker = list(color = "#00BCD4"),
-        hovertext = ~paste0(month, ": ", total_km, " km"),
-        hoverinfo = "text") |>
+walk_data <- monthly_distance |> filter(activity_type == "Walk")
+run_data <- monthly_distance |> filter(activity_type == "Run")
+
+plot_ly() |>
+  add_trace(
+    data = walk_data,
+    x = ~month,
+    y = ~total_km,
+    type = "bar",
+    name = "Walk",
+    marker = list(color = "#2E2E2E"),
+    hovertext = ~paste0(month_label, " - Walk: ", total_km, " km"),
+    hoverinfo = "text"
+  ) |>
+  add_trace(
+    data = run_data,
+    x = ~month,
+    y = ~total_km,
+    type = "bar",
+    name = "Run",
+    marker = list(color = "#D81B60"),
+    hovertext = ~paste0(month_label, " - Run: ", total_km, " km"),
+    hoverinfo = "text"
+  ) |>
   layout(
+    barmode = "stack",
     title = list(text = "<b>Distance by Month</b>", font = title_font, x = 0),
-    showlegend = FALSE,
+    showlegend = TRUE,
+    legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
     hoverlabel = list(
       bgcolor = "#333333",
@@ -145,10 +244,10 @@ plot_ly(monthly_distance,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-             type = "date",
-             tickformat = "%b %Y",
-             tickfont = list(family = "Inter, sans-serif", size = 12),
-             tickangle = -45),
+                 type = "date",
+                 tickformat = "%b %Y",
+                 tickfont = list(family = "Inter, sans-serif", size = 12),
+                 tickangle = -45),
     yaxis = list(title = "Distance (km)", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
     paper_bgcolor = "white",
