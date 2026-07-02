@@ -232,7 +232,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "<b>Distance by Month (km)</b>", font = title_font, x = 0),
+    title = list(text = "<b>Distance by Month </b>", font = title_font, x = 0),
     showlegend = TRUE,
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
