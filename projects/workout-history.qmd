@@ -54,7 +54,8 @@ activity_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
   d |> count(activity_type, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
-           color = activity_colors[activity_type])
+           color = activity_colors[activity_type],
+           total = sum(maara))
 })
 
 distance_colors <- c("0-5 km" = "#00BCD4", "5-10 km" = "#0097A7", 
@@ -64,7 +65,8 @@ distance_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
   d |> count(distance_class, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
-           color = distance_colors[distance_class])
+           color = distance_colors[distance_class],
+           total = sum(maara))
 })
 ```
 
@@ -87,6 +89,15 @@ buttons <- lapply(seq_along(years), function(i) {
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
         hovertext = list(I(paste0(d$activity_type, ": ", d$maara, " workouts"))),
         marker = list(list(colors = I(d$color)))
+      ),
+      list(
+        annotations = list(list(
+          text = paste0("<b>", d$total[1], "</b><br>workouts"),
+          x = 0.5, y = 0.5,
+          xref = "paper", yref = "paper",
+          showarrow = FALSE,
+          font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+        ))
       )
     ),
     label = years[i]
@@ -114,6 +125,13 @@ plot_ly(
       y = 1.2,
       xanchor = "right",
       font = list(family = "Inter, sans-serif", size = 12)
+    )),
+    annotations = list(list(
+      text = paste0("<b>", initial$total[1], "</b><br>workouts"),
+      x = 0.5, y = 0.5,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
     )),
     showlegend = TRUE,
     legend = list(
@@ -152,6 +170,15 @@ buttons_d <- lapply(seq_along(years), function(i) {
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
         hovertext = list(I(paste0(d$distance_class, ": ", d$maara, " workouts"))),
         marker = list(list(colors = I(d$color)))
+      ),
+      list(
+        annotations = list(list(
+          text = paste0("<b>", d$total[1], "</b><br>workouts"),
+          x = 0.5, y = 0.5,
+          xref = "paper", yref = "paper",
+          showarrow = FALSE,
+          font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+        ))
       )
     ),
     label = years[i]
@@ -179,6 +206,13 @@ plot_ly(
       y = 1.2,
       xanchor = "right",
       font = list(family = "Inter, sans-serif", size = 12)
+    )),
+    annotations = list(list(
+      text = paste0("<b>", initial_d$total[1], "</b><br>workouts"),
+      x = 0.5, y = 0.5,
+      xref = "paper", yref = "paper",
+      showarrow = FALSE,
+      font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
     )),
     showlegend = TRUE,
     legend = list(
