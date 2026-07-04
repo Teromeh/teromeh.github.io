@@ -1,0 +1,43 @@
+/*-- scss:defaults --*/
+
+/* Navbar */
+$navbar-bg: #1a1a1a;
+$navbar-fg: #ffffff;
+
+/* Typography */
+$font-family-base: "Outfit", sans-serif;
+$headings-font-family: "Outfit", sans-serif;
+$headings-font-weight: 500;
+
+/* Accent colour */
+$primary: #00BCD4;
+$link-color: #00BCD4;
+
+/* Background */
+$body-bg: #ffffff;
+$body-color: #1a1a1a;
+
+/* Card styling */
+$card-border-color: #e0e0e0;
+$card-border-radius: 8px;
+
+/*-- scss:rules --*/
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.quarto-dashboard-content {
+  padding-top: 80px;
+}
+
+.quarto-dashboard .card:first-child {
+  margin-top: 1rem;
+}
+
+.quarto-dashboard .navbar .bi {
+  font-size: 1.2rem;
+}
