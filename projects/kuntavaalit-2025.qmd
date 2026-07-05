@@ -93,7 +93,7 @@ occupation_all <- data |>
 occupation_elected <- elected |>
   mutate(ammatti = trimws(ammatti)) |>
   filter(!is.na(ammatti), ammatti != "") |>
-  distinct(ehdokasnumero, ammatti) |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
   count(ammatti, name = "maara") |>
   arrange(desc(maara)) |>
   head(10) |>
