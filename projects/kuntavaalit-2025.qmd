@@ -24,7 +24,7 @@ format:
 library(plotly)
 library(dplyr)
 
-data <- readRDS("df.rds")
+data <- readRDS("election-data-2025.rds")
 elected <- readRDS("elected.rds")
 
 party_colors <- c(
