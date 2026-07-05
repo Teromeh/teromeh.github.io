@@ -259,110 +259,6 @@ plot_ly(age_elected,
   config(displayModeBar = FALSE)
 ```
 
-## Row {height="180px"}
-
-### Column
-
-```{r}
-#| label: gender-all
-plot_ly() |>
-  add_trace(
-    data = gender_all |> filter(sukupuoli == "Mies"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#2E2E2E"),
-    hoverinfo = "none",
-    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  add_trace(
-    data = gender_all |> filter(sukupuoli == "Nainen"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#00BCD4"),
-    hoverinfo = "none",
-    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  layout(
-    barmode = "stack",
-    title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
-                 font = title_font, x = 0),
-    showlegend = FALSE,
-    dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100)),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)"
-  ) |>
-  config(displayModeBar = FALSE)
-```
-
-### Column
-
-```{r}
-#| label: gender-elected
-plot_ly() |>
-  add_trace(
-    data = gender_elected |> filter(sukupuoli == "Mies"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#2E2E2E"),
-    hoverinfo = "none",
-    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  add_trace(
-    data = gender_elected |> filter(sukupuoli == "Nainen"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#D81B60"),
-    hoverinfo = "none",
-    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  layout(
-    barmode = "stack",
-    title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
-                 font = title_font, x = 0),
-    showlegend = FALSE,
-    dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100)),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)"
-  ) |>
-  config(displayModeBar = FALSE)
-```
-
 ## Row
 
 ### Column
@@ -462,13 +358,116 @@ plot_ly(occupation_elected,
   ) |>
   config(displayModeBar = FALSE)
 ```
+## Row {height="180px"}
+
+### Column
+
+```{r}
+#| label: gender-all
+plot_ly() |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#3B6E8F"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#E8A93D"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
+                 font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Column
+
+```{r}
+#| label: gender-elected
+plot_ly() |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#3B6E8F"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#E8A93D"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
+                 font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
 
 ## Row
 
 ```{r}
 #| label: footer
 #| output: asis
-cat('<p style="font-size: 12px; color: #999999; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: Oikeusministeriö, Tieto- ja tulospalvelu
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a>
 </p>')
 ```
