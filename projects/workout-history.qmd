@@ -67,11 +67,14 @@ distance_text_colors <- c("0-5 km" = "#ffffff", "5-10 km" = "#ffffff",
 
 distance_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
+  average_distance <- mean(d$distance_km, na.rm = TRUE)
+
   d |> count(distance_class, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
            color = distance_colors[distance_class],
            text_color = distance_text_colors[distance_class],
-           total = sum(maara))
+           total = sum(maara),
+           average_distance = average_distance)
 })
 ```
 
@@ -180,7 +183,7 @@ buttons_d <- lapply(seq_along(years), function(i) {
       ),
       list(
         annotations = list(list(
-          text = paste0("<b>", format(d$total[1], big.mark = " "), "</b><br>workouts"),
+          text = paste0("<b>", format(round(d$average_distance[1], 1), nsmall = 1), " km</b><br>average"),
           x = 0.5, y = 0.5,
           xref = "paper", yref = "paper",
           showarrow = FALSE,
@@ -215,7 +218,7 @@ plot_ly(
       font = list(family = "Inter, sans-serif", size = 12)
     )),
     annotations = list(list(
-      text = paste0("<b>", format(initial_d$total[1], big.mark = " "), "</b><br>workouts"),
+      text = paste0("<b>", format(round(initial_d$average_distance[1], 1), nsmall = 1), " km</b><br>average"),
       x = 0.5, y = 0.5,
       xref = "paper", yref = "paper",
       showarrow = FALSE,
@@ -273,7 +276,7 @@ plot_ly() |>
   ) |>
   layout(
     barmode = "stack",
-    title = list(text = "<b>Distance by Month</b>", font = title_font, x = 0),
+    title = list(text = "<b>Distance by Month (km)</b>", font = title_font, x = 0),
     showlegend = TRUE,
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
