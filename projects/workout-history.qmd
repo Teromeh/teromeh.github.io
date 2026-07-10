@@ -1,24 +1,24 @@
 ---
-  title: "Workout data"
+title: "Workout data"
 format: 
   dashboard:
-  theme:
-  light: [litera, custom.scss]
-dark: [darkly, custom.scss]
-scrolling: true
-include-in-header:
-  text: |
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  nav-buttons:
-  - icon: envelope
-href: mailto:teromeh@proton.me
-- icon: house-door
-href: ../
-  ---
-  
-  ```{r}
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+```{r}
 #| label: setup
 #| include: false
 library(plotly)
@@ -61,17 +61,20 @@ activity_by_year <- lapply(years, function(yr) {
 })
 
 distance_colors <- c("0-5 km" = "#E8A93D", "5-10 km" = "#FF8C42", 
-                     "10-15 km" = "#F0473E", "15+ km" = "#B4182C")
+                      "10-15 km" = "#F0473E", "15+ km" = "#B4182C")
 distance_text_colors <- c("0-5 km" = "#ffffff", "5-10 km" = "#ffffff", 
-                          "10-15 km" = "#ffffff", "15+ km" = "#ffffff")
+                           "10-15 km" = "#ffffff", "15+ km" = "#ffffff")
 
 distance_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
+  average_distance <- mean(d$distance_km, na.rm = TRUE)
+
   d |> count(distance_class, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
            color = distance_colors[distance_class],
            text_color = distance_text_colors[distance_class],
-           total = sum(maara))
+           total = sum(maara),
+           average_distance = average_distance)
 })
 ```
 
@@ -180,7 +183,7 @@ buttons_d <- lapply(seq_along(years), function(i) {
       ),
       list(
         annotations = list(list(
-          text = paste0("<b>", format(d$total[1], big.mark = " "), "</b><br>workouts"),
+          text = paste0("<b>", format(round(d$average_distance[1], 1), nsmall = 1), " km</b><br>average"),
           x = 0.5, y = 0.5,
           xref = "paper", yref = "paper",
           showarrow = FALSE,
@@ -215,7 +218,7 @@ plot_ly(
       font = list(family = "Inter, sans-serif", size = 12)
     )),
     annotations = list(list(
-      text = paste0("<b>", format(initial_d$total[1], big.mark = " "), "</b><br>workouts"),
+      text = paste0("<b>", format(round(initial_d$average_distance[1], 1), nsmall = 1), " km</b><br>average"),
       x = 0.5, y = 0.5,
       xref = "paper", yref = "paper",
       showarrow = FALSE,
