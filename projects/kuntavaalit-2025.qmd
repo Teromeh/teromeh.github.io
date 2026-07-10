@@ -461,8 +461,8 @@ plot_ly() |>
   ) |>
   config(displayModeBar = FALSE)
 ```
-## Row
-### Column
+
+## Column
 
 ```{r}
 #| label: footer
