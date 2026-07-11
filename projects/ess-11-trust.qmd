@@ -1,5 +1,5 @@
 ---
-title: "EUropean Social Survey 11 - Trust"
+title: "The European Social Survey, round 11 (FI) - Trust"
 format: 
   dashboard:
     theme:
@@ -39,4 +39,14 @@ library(tidyr)
 #
 # Swap the path below for the real file once it's ready.
 
+```
+
+## Column
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey (ESS)</a>
+</p>')
 ```
