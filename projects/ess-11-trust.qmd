@@ -1,0 +1,42 @@
+---
+title: "EUropean Social Survey 11 - Trust"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+library(tidyr)
+
+#   agea     - age of respondent (numeric)
+#   ppltrst  - "most people can be trusted" (0-10)
+#   pplfair  - "most people try to be fair" (0-10)
+#   pplhlp   - "most people try to be helpful" (0-10)
+#   trstprl  - trust in country's parliament (0-10)
+#   trstlgl  - trust in the legal system (0-10)
+#   trstplc  - trust in the police (0-10)
+#   trstplt  - trust in politicians (0-10)
+#   trstprt  - trust in political parties (0-10)
+#   trstep   - trust in the European Parliament (0-10)
+#   trstun   - trust in the United Nations (0-10)
+#
+# Swap the path below for the real file once it's ready.
+
+```
