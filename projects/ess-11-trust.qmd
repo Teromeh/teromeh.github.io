@@ -36,9 +36,147 @@ library(tidyr)
 #   trstprt  - trust in political parties (0-10)
 #   trstep   - trust in the European Parliament (0-10)
 #   trstun   - trust in the United Nations (0-10)
-#
-# Swap the path below for the real file once it's ready.
 
+data <- readRDS("ess-11-trust-all.rds")
+
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+ess_red <- "#ED3D42"
+
+# A slightly darker shade of ess_red, used to highlight each country's
+# most common trust score.
+darken_hex <- function(hex, factor = 0.8) {
+  rgb_vals <- col2rgb(hex) * factor
+  rgb(rgb_vals[1], rgb_vals[2], rgb_vals[3], maxColorValue = 255)
+}
+ess_red_dark <- darken_hex(ess_red, factor = 0.8)
+
+# ISO2 -> display name lookup for ESS Round 11's participating countries.
+# Falls back to the raw code for anything not listed here.
+country_names <- c(
+  AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
+  CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
+  GR = "Greece", HU = "Hungary", IS = "Iceland", IE = "Ireland", IL = "Israel",
+  IT = "Italy", LV = "Latvia", LT = "Lithuania", ME = "Montenegro",
+  NL = "Netherlands", NO = "Norway", PL = "Poland", PT = "Portugal", RS = "Serbia",
+  SK = "Slovak Republic", SI = "Slovenia", ES = "Spain", SE = "Sweden",
+  CH = "Switzerland", UA = "Ukraine", GB = "United Kingdom"
+)
+
+cntry_codes <- sort(unique(data$cntry))
+cntry_labels <- unname(ifelse(cntry_codes %in% names(country_names),
+                               country_names[cntry_codes], cntry_codes))
+name_order <- order(cntry_labels)
+cntry_codes <- cntry_codes[name_order]
+cntry_labels <- cntry_labels[name_order]
+
+groups <- c("All", cntry_codes)
+group_labels <- c("All countries", cntry_labels)
+
+ppltrst_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(ppltrst)) |>
+    count(ppltrst) |>
+    mutate(percentage = round(n / sum(n) * 100, 0))
+})
+
+avg_scores <- vapply(ppltrst_by_country, function(d) {
+  round(weighted.mean(d$ppltrst, w = d$n), 1)
+}, numeric(1))
+
+bar_colors_by_country <- lapply(ppltrst_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+```
+
+## Row
+
+### Column
+
+```{r}
+#| label: ppltrst-bar
+initial <- ppltrst_by_country[[1]]
+
+avg_annotation <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+buttons <- lapply(seq_along(groups), function(i) {
+  d <- ppltrst_by_country[[i]]
+  list(
+    method = "update",
+    args = list(
+      list(
+        x = list(I(as.character(d$ppltrst))),
+        y = list(I(d$percentage)),
+        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
+        hovertext = list(I(paste0(formatC(d$n, big.mark = " ", format = "d"), " respondents"))),
+        "marker.color" = list(I(bar_colors_by_country[[i]]))
+      ),
+      list(
+        annotations = list(avg_annotation(avg_scores[i]))
+      )
+    ),
+    label = group_labels[i]
+  )
+})
+
+plot_ly() |>
+  add_trace(
+    data = initial,
+    x = ~factor(ppltrst, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country[[1]]),
+    text = ~paste0("<b>", percentage, "%</b>"),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0(formatC(n, big.mark = " ", format = "d"), " respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = "<b>Most People Can Be Trusted (0: You can't be too careful, 10: Most people can be trusted)</b>",
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation(avg_scores[1])),
+    updatemenus = list(list(
+      type = "dropdown",
+      buttons = buttons,
+      x = 1,
+      y = 1.2,
+      xanchor = "right",
+      font = list(family = "Inter, sans-serif", size = 12)
+    )),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 tickmode = "linear", dtick = 1,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 40)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ## Column
@@ -47,6 +185,6 @@ library(tidyr)
 #| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey (ESS)</a>
+Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
 </p>')
 ```
