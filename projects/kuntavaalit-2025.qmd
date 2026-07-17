@@ -1,5 +1,5 @@
 ---
-title: "The European Social Survey, round 11 (FI) - Trust"
+title: "Kuntavaalit 2025"
 format: 
   dashboard:
     theme:
@@ -23,51 +23,186 @@ format:
 #| include: false
 library(plotly)
 library(dplyr)
-library(tidyr)
+library(DT)
 
-#   agea     - age of respondent (numeric)
-#   ppltrst  - "most people can be trusted" (0-10)
-#   pplfair  - "most people try to be fair" (0-10)
-#   pplhlp   - "most people try to be helpful" (0-10)
-#   trstprl  - trust in country's parliament (0-10)
-#   trstlgl  - trust in the legal system (0-10)
-#   trstplc  - trust in the police (0-10)
-#   trstplt  - trust in politicians (0-10)
-#   trstprt  - trust in political parties (0-10)
-#   trstep   - trust in the European Parliament (0-10)
-#   trstun   - trust in the United Nations (0-10)
+data <- readRDS("C:/Users/terom/Documents/GitHub/teromeh.github.io/projects/election-data-2025.rds")
+elected <- readRDS("elected.rds")
 
-data <- readRDS("ess-11-trust-all.rds")
+party_colors <- c(
+  "SDP" = "#F54B4B",
+  "KOK" = "#003A54",
+  "KESK" = "#3BAD2E",
+  "VIHR" = "#76B72A",
+  "VAS" = "#F00A64",
+  "PS" = "#002395",
+  "RKP" = "#ffdc5d",
+  "KD" = "#118DFF",
+  "LIIK" = "#cf83c8",
+  "Muut" = "#000000"
+)
 
 title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 
-ess_red <- "#ED3D42"
+party_data <- data |>
+  group_by(puolueen_ryhman_nimilyhenne_suomeksi) |>
+  summarise(total_votes = sum(aanet_yhteensa_lkm, na.rm = TRUE), .groups = "drop") |>
+  mutate(percentage = (total_votes / sum(total_votes)) * 100) |>
+  slice_max(total_votes, n = 10) |>
+  mutate(
+    label = paste0(format(round(percentage, 1), decimal.mark = ","), " %"),
+    party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>")
+  )
 
-# ISO2 -> display name lookup for ESS Round 11's participating countries.
-# Falls back to the raw code for anything not listed here.
-country_names <- c(
-  AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
-  CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
-  GR = "Greece", HU = "Hungary", IS = "Iceland", IE = "Ireland", IL = "Israel",
-  IT = "Italy", LV = "Latvia", LT = "Lithuania", ME = "Montenegro",
-  NL = "Netherlands", NO = "Norway", PL = "Poland", PT = "Portugal", RS = "Serbia",
-  SK = "Slovak Republic", SI = "Slovenia", ES = "Spain", SE = "Sweden",
-  CH = "Switzerland", UA = "Ukraine", GB = "United Kingdom"
-)
+age_all <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  count(ika_vaalipaivana, name = "maara")
 
-cntry_codes <- sort(unique(data$cntry))
-groups <- c("All", cntry_codes)
-group_labels <- c("All countries",
-                   unname(ifelse(cntry_codes %in% names(country_names),
-                                  country_names[cntry_codes], cntry_codes)))
+age_elected <- elected |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  count(ika_vaalipaivana, name = "maara")
 
-ppltrst_by_country <- lapply(groups, function(g) {
-  d <- if (g == "All") data else data |> filter(cntry == g)
-  d |>
-    filter(!is.na(ppltrst)) |>
-    count(ppltrst) |>
-    mutate(percentage = round(n / sum(n) * 100, 0))
-})
+gender_all <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, sukupuoli) |>
+  count(sukupuoli, name = "maara") |>
+  mutate(
+    total = sum(maara),
+    percentage = (maara / total) * 100,
+    label = paste0(format(maara, big.mark = " "), " (",
+                   format(round(percentage, 1), decimal.mark = ","), " %)")
+  )
+
+gender_elected <- elected |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, sukupuoli) |>
+  count(sukupuoli, name = "maara") |>
+  mutate(
+    total = sum(maara),
+    percentage = (maara / total) * 100,
+    label = paste0(format(maara, big.mark = " "), " (",
+                   format(round(percentage, 1), decimal.mark = ","), " %)")
+  )
+
+occupation_all <- data |>
+  mutate(ammatti = trimws(ammatti)) |>
+  filter(!is.na(ammatti), ammatti != "") |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
+  count(ammatti, name = "maara") |>
+  arrange(desc(maara)) |>
+  head(10) |>
+  mutate(label = format(maara, big.mark = " "))
+
+occupation_elected <- elected |>
+  mutate(ammatti = trimws(ammatti)) |>
+  filter(!is.na(ammatti), ammatti != "") |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
+  count(ammatti, name = "maara") |>
+  arrange(desc(maara)) |>
+  head(10) |>
+  mutate(label = format(maara, big.mark = " "))
+
+avg_age_all <- data |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
+  pull(avg)
+
+avg_age_elected <- elected |>
+  distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
+  summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
+  pull(avg)
+
+candidates_table <- elected |>
+  distinct(
+    ehdokasnumero,
+    henkilon_etunimi,
+    henkilon_sukunimi,
+    puolueen_ryhman_nimilyhenne_suomeksi,
+    sukupuoli,
+    ika_vaalipaivana,
+    ammatti,
+    kotikunnan_nimi_suomeksi,
+    aanet_yhteensa_lkm
+  ) |>
+  mutate(Nimi = paste(trimws(henkilon_etunimi), trimws(henkilon_sukunimi))) |>
+  select(
+    Nimi,
+    Puolue = puolueen_ryhman_nimilyhenne_suomeksi,
+    Sukupuoli = sukupuoli,
+    Ikä = ika_vaalipaivana,
+    Kunta = kotikunnan_nimi_suomeksi,
+    Ammatti = ammatti,
+    `Äänet yhteensä` = aanet_yhteensa_lkm
+  ) |>
+  mutate(
+    Ammatti = trimws(Ammatti),
+    Sukupuoli = factor(Sukupuoli),
+    Puolue = factor(Puolue),
+    Kunta = factor(Kunta)
+  ) |>
+  arrange(desc(`Äänet yhteensä`))
+```
+
+
+
+## Row
+
+### Column
+
+```{r}
+#| label: party-chart
+plot_ly(party_data,
+        x = ~percentage,
+        y = ~reorder(party_bold, percentage),
+        type = "bar",
+        orientation = "h",
+        color = ~puolueen_ryhman_nimilyhenne_suomeksi,
+        colors = party_colors,
+        hovertext = ~paste0(puolueen_ryhman_nimilyhenne_suomeksi, ": ",
+                    format(round(percentage, 1), decimal.mark = ","), " %",
+                    "<br>Ääniä yhteensä: ", 
+                    format(total_votes, big.mark = " ")),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Äänijakauma - Puolueet</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", 
+                  family = "Inter, sans-serif",
+                  size = 13)
+    ),
+    xaxis = list(title = "", 
+             range = c(0, max(party_data$percentage) * 1.3),
+             showgrid = FALSE,
+             showline = FALSE,
+             zeroline = FALSE,
+             showticklabels = FALSE),
+    yaxis = list(title = "",
+             showgrid = FALSE,
+             showline = FALSE,
+             zeroline = FALSE,
+             ticklabelposition = "outside",
+             ticklen = 10,
+             tickcolor = "rgba(0,0,0,0)",
+             tickfont = list(color = "#1a1a1a", size = 14, 
+                             family = "Inter, sans-serif")
+             ),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    annotations = lapply(1:nrow(party_data), function(i) {
+      list(
+        x = party_data$percentage[i],
+        y = party_data$party_bold[i],
+        text = paste0("<b>", party_data$label[i], "</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 13, 
+                    family = "Inter, sans-serif")
+      ) 
+    })
+  ) |>
+  config(displayModeBar = FALSE)
 ```
 
 ## Row
@@ -75,56 +210,17 @@ ppltrst_by_country <- lapply(groups, function(g) {
 ### Column
 
 ```{r}
-#| label: ppltrst-bar
-initial <- ppltrst_by_country[[1]]
-
-buttons <- lapply(seq_along(groups), function(i) {
-  d <- ppltrst_by_country[[i]]
-  list(
-    method = "update",
-    args = list(
-      list(
-        x = list(I(as.character(d$ppltrst))),
-        y = list(I(d$percentage)),
-        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(formatC(d$n, big.mark = " ", format = "d"), " respondents")))
-      )
-    ),
-    label = group_labels[i]
-  )
-})
-
-plot_ly() |>
-  add_trace(
-    data = initial,
-    x = ~factor(ppltrst, levels = 0:10),
-    y = ~percentage,
-    type = "bar",
-    marker = list(color = ess_red),
-    text = ~paste0("<b>", percentage, "%</b>"),
-    textposition = "outside",
-    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
-    hovertext = ~paste0(formatC(n, big.mark = " ", format = "d"), " respondents"),
-    hoverinfo = "text"
-  ) |>
+#| label: age-all
+plot_ly(age_all,
+        x = ~ika_vaalipaivana,
+        y = ~maara,
+        type = "bar",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
+                            "Ehdokkaita: ", maara),
+        hoverinfo = "text") |>
   layout(
-    title = list(
-      text = "<b>Most People Can Be Trusted</b><br><span style='font-size:12px;font-weight:400;color:#777777;'>0: You can't be too careful</span><br><span style='font-size:12px;font-weight:400;color:#777777;'>10: Most people can be trusted</span>",
-      font = title_font,
-      x = 0,
-      y = 0.95,
-      yanchor = "top"
-    ),
-    margin = list(t = 130),
-    updatemenus = list(list(
-      type = "dropdown",
-      buttons = buttons,
-      x = 1,
-      y = 0.95,
-      xanchor = "right",
-      yanchor = "top",
-      font = list(family = "Inter, sans-serif", size = 12)
-    )),
+    title = list(text = "<b>Ikäjakauma - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
@@ -132,27 +228,305 @@ plot_ly() |>
       bordercolor = "#333333",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
-    xaxis = list(title = list(text = "Trust level (0 - 10)",
-                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
-                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
-                 tickmode = "linear", dtick = 1,
-                 tickfont = list(family = "Inter, sans-serif", size = 12)),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
-                 ticksuffix = "%",
-                 range = c(0, 50)),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+    yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    annotations = list(
+      list(
+        x = max(age_all$ika_vaalipaivana),
+        y = max(age_all$maara),
+        text = paste0("Keskiarvo: <b>", format(avg_age_all, decimal.mark = ","), "</b> vuotta"),
+        showarrow = FALSE,
+        xanchor = "right",
+        font = list(color = "#1a1a1a", size = 12,
+                    family = "Inter, sans-serif")
+      )
+    )
   ) |>
   config(displayModeBar = FALSE)
 ```
 
-## Column
+### Column
+
+```{r}
+#| label: age-elected
+plot_ly(age_elected,
+        x = ~ika_vaalipaivana,
+        y = ~maara,
+        type = "bar",
+        marker = list(color = "#D81B60"),
+        hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
+                            "Valittuja: ", maara),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Ikäjakauma - Valitut ehdokkaat</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+    yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    annotations = list(
+      list(
+        x = max(age_elected$ika_vaalipaivana),
+        y = max(age_elected$maara),
+        text = paste0("Keskiarvo: <b>", format(avg_age_elected, decimal.mark = ","), "</b> vuotta"),
+        showarrow = FALSE,
+        xanchor = "right",
+        font = list(color = "#1a1a1a", size = 12,
+                    family = "Inter, sans-serif")
+      )
+    )
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row
+
+### Column
+
+```{r}
+#| label: occupation-all
+plot_ly(occupation_all,
+        x = ~maara,
+        y = ~reorder(ammatti, maara),
+        type = "bar",
+        orientation = "h",
+        marker = list(color = "#00BCD4"),
+        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " ehdokasta"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Yleisimmät ammatit - Kaikki ehdokkaat</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showline = FALSE, showticklabels = FALSE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE,
+                 ticklabelposition = "outside",
+                 ticklen = 10,
+                 tickcolor = "rgba(0,0,0,0)",
+                 tickfont = list(color = "#1a1a1a", size = 13,
+                                 family = "Inter, sans-serif")),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    annotations = lapply(1:nrow(occupation_all), function(i) {
+      list(
+        x = occupation_all$maara[i],
+        y = occupation_all$ammatti[i],
+        text = paste0("<b>", occupation_all$label[i], "</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 13,
+                    family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row
+
+### Column
+
+```{r}
+#| label: occupation-elected
+plot_ly(occupation_elected,
+        x = ~maara,
+        y = ~reorder(ammatti, maara),
+        type = "bar",
+        orientation = "h",
+        marker = list(color = "#D81B60"),
+        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " valittua"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Yleisimmät ammatit - Valitut ehdokkaat</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showline = FALSE, showticklabels = FALSE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE,
+                 ticklabelposition = "outside",
+                 ticklen = 10,
+                 tickcolor = "rgba(0,0,0,0)",
+                 tickfont = list(color = "#1a1a1a", size = 13,
+                                 family = "Inter, sans-serif")),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    annotations = lapply(1:nrow(occupation_elected), function(i) {
+      list(
+        x = occupation_elected$maara[i],
+        y = occupation_elected$ammatti[i],
+        text = paste0("<b>", occupation_elected$label[i], "</b>"),
+        showarrow = FALSE,
+        xanchor = "left",
+        xshift = 5,
+        font = list(color = "#1a1a1a", size = 13,
+                    family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+## Row {height="180px"}
+
+### Column
+
+```{r}
+#| label: gender-all
+plot_ly() |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#3B6E8F"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_all |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#E8A93D"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
+                 font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Column
+
+```{r}
+#| label: gender-elected
+plot_ly() |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Mies"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#3B6E8F"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  add_trace(
+    data = gender_elected |> filter(sukupuoli == "Nainen"),
+    x = ~percentage,
+    y = ~"",
+    type = "bar",
+    orientation = "h",
+    marker = list(color = "#E8A93D"),
+    hoverinfo = "none",
+    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
+    textposition = "inside",
+    insidetextanchor = "middle",
+    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
+  ) |>
+  layout(
+    barmode = "stack",
+    title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
+                 font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 showticklabels = FALSE, range = c(0, 100)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row
+### Column
+
+```{r}
+#| label: candidates-table
+datatable(candidates_table,
+          filter = "top",
+          caption = htmltools::tags$caption(
+            style = "caption-side: top; font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 14px; color: #1a1a1a; text-align: left; padding: 0 0 0.5rem 0;",
+            "Valitut ehdokkaat"
+          ),
+          options = list(
+            pageLength = 25,
+            scrollX = TRUE,
+            autoWidth = TRUE,
+            info = FALSE,
+            dom = "lrtip",
+            language = list(
+              lengthMenu = "Näytä _MENU_ riviä",
+              paginate = list(previous = "Edellinen", `next` = "Seuraava")
+            )
+          ),
+          rownames = FALSE) |>
+  formatCurrency(c("Äänet yhteensä"), currency = "", digits = 0, mark = " ")
+```
+
+## Row
 
 ```{r}
 #| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
+Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a>
 </p>')
 ```
+
