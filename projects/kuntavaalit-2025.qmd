@@ -185,7 +185,7 @@ plot_ly(age_all,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#00BCD4"),
+        marker = list(color = "#004677"),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Ehdokkaita: ", maara),
         hoverinfo = "text") |>
@@ -227,7 +227,7 @@ plot_ly(age_elected,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#D81B60"),
+        marker = list(color = "#C0392B"),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Valittuja: ", maara),
         hoverinfo = "text") |>
@@ -272,7 +272,7 @@ plot_ly(occupation_all,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#00BCD4"),
+        marker = list(color = "#004677"),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " ehdokasta"),
         hoverinfo = "text") |>
   layout(
@@ -322,7 +322,7 @@ plot_ly(occupation_elected,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#D81B60"),
+        marker = list(color = "#C0392B"),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " valittua"),
         hoverinfo = "text") |>
   layout(
@@ -473,4 +473,7 @@ cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; 
 Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a>
 </p>')
 ```
+
+
+
 
