@@ -1,5 +1,5 @@
 ---
-title: "The European Social Survey, round 11 (FI) - Trust"
+title: "The European Social Survey, round 11 - Trust"
 format: 
   dashboard:
     theme:
@@ -26,9 +26,9 @@ library(dplyr)
 library(tidyr)
 
 #   agea     - age of respondent (numeric)
-#   ppltrst  - "most people can be trusted" (0-10)
-#   pplfair  - "most people try to be fair" (0-10)
-#   pplhlp   - "most people try to be helpful" (0-10)
+#   ppltrst  - most people can be trusted (0-10)
+#   pplfair  - most people try to be fair (0-10)
+#   pplhlp   - most people try to be helpful (0-10)
 #   trstprl  - trust in country's parliament (0-10)
 #   trstlgl  - trust in the legal system (0-10)
 #   trstplc  - trust in the police (0-10)
@@ -43,23 +43,20 @@ title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 
 ess_red <- "#ED3D42"
 
-# A slightly darker shade of ess_red, used to highlight each country's
-# most common trust score.
+# Darker shade of red to highlight each country's most common trust score.
 darken_hex <- function(hex, factor = 0.8) {
   rgb_vals <- col2rgb(hex) * factor
   rgb(rgb_vals[1], rgb_vals[2], rgb_vals[3], maxColorValue = 255)
 }
 ess_red_dark <- darken_hex(ess_red, factor = 0.8)
 
-# ISO2 -> display name lookup for ESS Round 11's participating countries.
-# Falls back to the raw code for anything not listed here.
 country_names <- c(
   AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
   CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
   GR = "Greece", HU = "Hungary", IS = "Iceland", IE = "Ireland", IL = "Israel",
   IT = "Italy", LV = "Latvia", LT = "Lithuania", ME = "Montenegro",
   NL = "Netherlands", NO = "Norway", PL = "Poland", PT = "Portugal", RS = "Serbia",
-  SK = "Slovak Republic", SI = "Slovenia", ES = "Spain", SE = "Sweden",
+  SK = "Slovakia", SI = "Slovenia", ES = "Spain", SE = "Sweden",
   CH = "Switzerland", UA = "Ukraine", GB = "United Kingdom"
 )
 
@@ -78,12 +75,15 @@ ppltrst_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(ppltrst)) |>
     count(ppltrst) |>
-    mutate(percentage = round(n / sum(n) * 100, 0))
+    mutate(percentage = round(n / sum(n) * 100, 0),
+           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
 })
 
 avg_scores <- vapply(ppltrst_by_country, function(d) {
   round(weighted.mean(d$ppltrst, w = d$n), 1)
 }, numeric(1))
+
+total_n <- vapply(ppltrst_by_country, function(d) sum(d$n), numeric(1))
 
 bar_colors_by_country <- lapply(ppltrst_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
@@ -109,6 +109,18 @@ avg_annotation <- function(avg) {
   )
 }
 
+n_annotation <- function(n) {
+  list(
+    text = paste0("n: <span style='color:#1a1a1a;font-weight:700;'>",
+                  formatC(n, big.mark = " ", format = "d"), "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 0.96, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
 buttons <- lapply(seq_along(groups), function(i) {
   d <- ppltrst_by_country[[i]]
   list(
@@ -122,14 +134,14 @@ buttons <- lapply(seq_along(groups), function(i) {
         "marker.color" = list(I(bar_colors_by_country[[i]]))
       ),
       list(
-        annotations = list(avg_annotation(avg_scores[i]))
+        annotations = list(avg_annotation(avg_scores[i]), n_annotation(total_n[i]))
       )
     ),
     label = group_labels[i]
   )
 })
 
-plot_ly() |>
+plot_ly(elementId = "ppltrst-bar") |>
   add_trace(
     data = initial,
     x = ~factor(ppltrst, levels = 0:10),
@@ -148,7 +160,7 @@ plot_ly() |>
       font = title_font,
       x = 0
     ),
-    annotations = list(avg_annotation(avg_scores[1])),
+    annotations = list(avg_annotation(avg_scores[1]), n_annotation(total_n[1])),
     updatemenus = list(list(
       type = "dropdown",
       buttons = buttons,
