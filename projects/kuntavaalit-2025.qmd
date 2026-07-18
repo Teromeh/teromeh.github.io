@@ -25,7 +25,7 @@ library(plotly)
 library(dplyr)
 library(DT)
 
-data <- readRDS("C:/Users/terom/Documents/GitHub/teromeh.github.io/projects/election-data-2025.rds")
+data <- readRDS("election-data-2025.rds")
 elected <- readRDS("elected.rds")
 
 party_colors <- c(
@@ -108,36 +108,6 @@ avg_age_elected <- elected |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
   summarise(avg = round(mean(ika_vaalipaivana, na.rm = TRUE), 1)) |>
   pull(avg)
-
-candidates_table <- elected |>
-  distinct(
-    ehdokasnumero,
-    henkilon_etunimi,
-    henkilon_sukunimi,
-    puolueen_ryhman_nimilyhenne_suomeksi,
-    sukupuoli,
-    ika_vaalipaivana,
-    ammatti,
-    kotikunnan_nimi_suomeksi,
-    aanet_yhteensa_lkm
-  ) |>
-  mutate(Nimi = paste(trimws(henkilon_etunimi), trimws(henkilon_sukunimi))) |>
-  select(
-    Nimi,
-    Puolue = puolueen_ryhman_nimilyhenne_suomeksi,
-    Sukupuoli = sukupuoli,
-    Ikä = ika_vaalipaivana,
-    Kunta = kotikunnan_nimi_suomeksi,
-    Ammatti = ammatti,
-    `Äänet yhteensä` = aanet_yhteensa_lkm
-  ) |>
-  mutate(
-    Ammatti = trimws(Ammatti),
-    Sukupuoli = factor(Sukupuoli),
-    Puolue = factor(Puolue),
-    Kunta = factor(Kunta)
-  ) |>
-  arrange(desc(`Äänet yhteensä`))
 ```
 
 
@@ -492,32 +462,6 @@ plot_ly() |>
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
-```
-
-## Row
-### Column
-
-```{r}
-#| label: candidates-table
-datatable(candidates_table,
-          filter = "top",
-          caption = htmltools::tags$caption(
-            style = "caption-side: top; font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 14px; color: #1a1a1a; text-align: left; padding: 0 0 0.5rem 0;",
-            "Valitut ehdokkaat"
-          ),
-          options = list(
-            pageLength = 25,
-            scrollX = TRUE,
-            autoWidth = TRUE,
-            info = FALSE,
-            dom = "lrtip",
-            language = list(
-              lengthMenu = "Näytä _MENU_ riviä",
-              paginate = list(previous = "Edellinen", `next` = "Seuraava")
-            )
-          ),
-          rownames = FALSE) |>
-  formatCurrency(c("Äänet yhteensä"), currency = "", digits = 0, mark = " ")
 ```
 
 ## Row
