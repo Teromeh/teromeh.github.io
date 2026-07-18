@@ -27,7 +27,7 @@ library(lubridate)
 
 data <- readRDS("workout-history.rds")
 
-title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#2D4A2B")
 
 activity_counts <- data |>
   count(activity_type, name = "maara") |>
@@ -48,8 +48,8 @@ monthly_distance <- data |>
 
 years <- c("All", sort(unique(format(data$workout_date, "%Y")), decreasing = TRUE))
 
-activity_colors <- c("Walk" = "#FFC107", "Run" = "#E4007C")
-activity_text_colors <- c("Walk" = "#1a1a1a", "Run" = "#ffffff")
+activity_colors <- c("Walk" = "#8FAF6B", "Run" = "#D97E3D")
+activity_text_colors <- c("Walk" = "#1F3319", "Run" = "#ffffff")
 
 activity_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
@@ -60,9 +60,9 @@ activity_by_year <- lapply(years, function(yr) {
            total = sum(maara))
 })
 
-distance_colors <- c("0-5 km" = "#E8A93D", "5-10 km" = "#FF8C42", 
-                      "10-15 km" = "#F0473E", "15+ km" = "#B4182C")
-distance_text_colors <- c("0-5 km" = "#ffffff", "5-10 km" = "#ffffff", 
+distance_colors <- c("0-5 km" = "#D9C89E", "5-10 km" = "#9CAF88", 
+                      "10-15 km" = "#5C7A4A", "15+ km" = "#2D4A2B")
+distance_text_colors <- c("0-5 km" = "#2D4A2B", "5-10 km" = "#1F3319", 
                            "10-15 km" = "#ffffff", "15+ km" = "#ffffff")
 
 distance_by_year <- lapply(years, function(yr) {
@@ -105,7 +105,7 @@ buttons <- lapply(seq_along(years), function(i) {
           x = 0.5, y = 0.5,
           xref = "paper", yref = "paper",
           showarrow = FALSE,
-          font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+          font = list(family = "Inter, sans-serif", size = 16, color = "#2D4A2B")
         ))
       )
     ),
@@ -140,7 +140,7 @@ plot_ly(
       x = 0.5, y = 0.5,
       xref = "paper", yref = "paper",
       showarrow = FALSE,
-      font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+      font = list(family = "Inter, sans-serif", size = 16, color = "#2D4A2B")
     )),
     showlegend = TRUE,
     legend = list(
@@ -152,12 +152,12 @@ plot_ly(
       title = list(text = "<b>Activity</b>", font = list(family = "Inter, sans-serif", size = 13))
     ),
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = "#2D4A2B",
+      bordercolor = "#2D4A2B",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
 ```
@@ -187,7 +187,7 @@ buttons_d <- lapply(seq_along(years), function(i) {
           x = 0.5, y = 0.5,
           xref = "paper", yref = "paper",
           showarrow = FALSE,
-          font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+          font = list(family = "Inter, sans-serif", size = 16, color = "#2D4A2B")
         ))
       )
     ),
@@ -222,7 +222,7 @@ plot_ly(
       x = 0.5, y = 0.5,
       xref = "paper", yref = "paper",
       showarrow = FALSE,
-      font = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a")
+      font = list(family = "Inter, sans-serif", size = 16, color = "#2D4A2B")
     )),
     showlegend = TRUE,
     legend = list(
@@ -234,12 +234,12 @@ plot_ly(
       title = list(text = "<b>Distance</b>", font = list(family = "Inter, sans-serif", size = 13))
     ),
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = "#2D4A2B",
+      bordercolor = "#2D4A2B",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
 ```
@@ -260,7 +260,7 @@ plot_ly() |>
     y = ~total_km,
     type = "bar",
     name = "Walk",
-    marker = list(color = "#FFC107"),
+    marker = list(color = "#8FAF6B"),
     hovertext = ~paste0(month_label, " - Walk: ", total_km, " km"),
     hoverinfo = "text"
   ) |>
@@ -270,7 +270,7 @@ plot_ly() |>
     y = ~total_km,
     type = "bar",
     name = "Run",
-    marker = list(color = "#E4007C"),
+    marker = list(color = "#D97E3D"),
     hovertext = ~paste0(month_label, " - Run: ", total_km, " km"),
     hoverinfo = "text"
   ) |>
@@ -281,8 +281,8 @@ plot_ly() |>
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = "#2D4A2B",
+      bordercolor = "#2D4A2B",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
@@ -292,8 +292,8 @@ plot_ly() |>
                  tickangle = -45),
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
-    paper_bgcolor = "white",
-    plot_bgcolor = "white"
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
   config(displayModeBar = FALSE)
 ```
