@@ -41,3 +41,8 @@ $card-border-radius: 8px;
 .quarto-dashboard .navbar .bi {
   font-size: 1.2rem;
 }
+
+/* Force Plotly to use pointer when hovering */
+.js-plotly-plot .nsewdrag {
+  cursor: default !important;
+}
