@@ -130,7 +130,7 @@ buttons <- lapply(seq_along(groups), function(i) {
         x = list(I(as.character(d$ppltrst))),
         y = list(I(d$percentage)),
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(formatC(d$n, big.mark = " ", format = "d"), " respondents"))),
+        hovertext = list(I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents"))),
         "marker.color" = list(I(bar_colors_by_country[[i]]))
       ),
       list(
@@ -151,7 +151,7 @@ plot_ly(elementId = "ppltrst-bar") |>
     text = ~paste0("<b>", percentage, "%</b>"),
     textposition = "outside",
     textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
-    hovertext = ~paste0(formatC(n, big.mark = " ", format = "d"), " respondents"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
     hoverinfo = "text"
   ) |>
   layout(
