@@ -50,6 +50,10 @@ darken_hex <- function(hex, factor = 0.8) {
 }
 ess_red_dark <- darken_hex(ess_red, factor = 0.8)
 
+# Deeper maroon for hover tooltips - dark enough to keep white text legible,
+# while still reading as part of the red palette.
+ess_red_hover <- darken_hex(ess_red, factor = 0.45)
+
 country_names <- c(
   AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
   CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
@@ -88,11 +92,28 @@ total_n <- vapply(ppltrst_by_country, function(d) sum(d$n), numeric(1))
 bar_colors_by_country <- lapply(ppltrst_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
 })
+
+pplfair_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(pplfair)) |>
+    count(pplfair) |>
+    mutate(percentage = round(n / sum(n) * 100, 0),
+           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
+})
+
+avg_scores_fair <- vapply(pplfair_by_country, function(d) {
+  round(weighted.mean(d$pplfair, w = d$n), 1)
+}, numeric(1))
+
+total_n_fair <- vapply(pplfair_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_fair <- lapply(pplfair_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
 ```
 
 ## Row
-
-### Column
 
 ```{r}
 #| label: ppltrst-bar
@@ -115,6 +136,17 @@ n_annotation <- function(n) {
                   formatC(n, big.mark = " ", format = "d"), "</span>"),
     xref = "paper", x = 1, xanchor = "right",
     yref = "paper", y = 0.96, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_fair <- function(avg) {
+  list(
+    text = paste0("Average fairness level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
     align = "right",
     showarrow = FALSE,
     font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
@@ -156,7 +188,10 @@ plot_ly(elementId = "ppltrst-bar") |>
   ) |>
   layout(
     title = list(
-      text = "<b>Most People Can Be Trusted (0: You can't be too careful, 10: Most people can be trusted)</b>",
+      text = paste0(
+        "<b>Most People Can Be Trusted</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: You can't be too careful, 10: Most people can be trusted)</span>"
+      ),
       font = title_font,
       x = 0
     ),
@@ -167,16 +202,103 @@ plot_ly(elementId = "ppltrst-bar") |>
       x = 1,
       y = 1.2,
       xanchor = "right",
-      font = list(family = "Inter, sans-serif", size = 12)
+      bgcolor = "#ffffff",
+      bordercolor = "#dddddd",
+      borderwidth = 1,
+      pad = list(l = 12, r = 12, t = 6, b = 6),
+      font = list(family = "Inter, sans-serif", size = 12, color = "#333333")
     )),
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = ess_red_hover,
+      bordercolor = ess_red_hover,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 tickmode = "linear", dtick = 1,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 40)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row
+
+```{r}
+#| label: pplfair-bar
+initial_fair <- pplfair_by_country[[1]]
+
+buttons_fair <- lapply(seq_along(groups), function(i) {
+  d <- pplfair_by_country[[i]]
+  list(
+    method = "update",
+    args = list(
+      list(
+        x = list(I(as.character(d$pplfair))),
+        y = list(I(d$percentage)),
+        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
+        hovertext = list(I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents"))),
+        "marker.color" = list(I(bar_colors_by_country_fair[[i]]))
+      ),
+      list(
+        annotations = list(avg_annotation_fair(avg_scores_fair[i]), n_annotation(total_n_fair[i]))
+      )
+    ),
+    label = group_labels[i]
+  )
+})
+
+plot_ly(elementId = "pplfair-bar") |>
+  add_trace(
+    data = initial_fair,
+    x = ~factor(pplfair, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_fair[[1]]),
+    text = ~paste0("<b>", percentage, "%</b>"),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Most People Try to Be Fair</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: Most people try to take advantage of me, 10: Most people try to be fair)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_fair(avg_scores_fair[1]), n_annotation(total_n_fair[1])),
+    updatemenus = list(list(
+      type = "dropdown",
+      buttons = buttons_fair,
+      x = 1,
+      y = 1.2,
+      xanchor = "right",
+      bgcolor = "#ffffff",
+      bordercolor = "#dddddd",
+      borderwidth = 1,
+      pad = list(l = 12, r = 12, t = 6, b = 6),
+      font = list(family = "Inter, sans-serif", size = 12, color = "#333333")
+    )),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = ess_red_hover,
+      bordercolor = ess_red_hover,
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Fairness level (0 - 10)",
                               font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
                  showgrid = FALSE, showline = FALSE, zeroline = FALSE,
                  tickmode = "linear", dtick = 1,
@@ -196,7 +318,75 @@ plot_ly(elementId = "ppltrst-bar") |>
 ```{r}
 #| label: footer
 #| output: asis
-cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+cat('
+<style>
+.ess-filter-select {
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  color: #333333;
+  background-color: #ffffff;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+// Plotly\'s built-in dropdown (updatemenus) renders its scrollable list in
+// SVG, and its wheel-scroll handling does not reliably stop the event from
+// bubbling up to the page - so scrolling inside the list also scrolls the
+// whole dashboard. Native <select> elements do not have this problem, so we
+// build one from the same button/args data Plotly already has, wire it to
+// call the identical Plotly.update(), and hide the original dropdown.
+function essReplaceDropdown(id) {
+  var gd = document.getElementById(id);
+  if (!gd || !gd.layout || !gd.layout.updatemenus || gd.dataset.essFilterReady) return;
+  gd.dataset.essFilterReady = "1";
+
+  var buttons = gd.layout.updatemenus[0].buttons;
+
+  var select = document.createElement("select");
+  select.className = "ess-filter-select";
+  buttons.forEach(function(btn, i) {
+    var opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = btn.label;
+    select.appendChild(opt);
+  });
+
+  select.addEventListener("change", function() {
+    var btn = buttons[select.selectedIndex];
+    Plotly.update(gd, btn.args[0], btn.args[1]);
+  });
+
+  var wrapper = document.createElement("div");
+  wrapper.style.textAlign = "right";
+  wrapper.style.marginBottom = "4px";
+  wrapper.appendChild(select);
+
+  gd.parentElement.insertBefore(wrapper, gd);
+  Plotly.relayout(gd, {"updatemenus[0].visible": false});
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  var ids = ["ppltrst-bar", "pplfair-bar"];
+  var interval = setInterval(function() {
+    var allDone = true;
+    ids.forEach(function(id) {
+      var gd = document.getElementById(id);
+      if (gd && gd.layout && gd.layout.updatemenus) {
+        essReplaceDropdown(id);
+      }
+      if (!gd || !gd.dataset.essFilterReady) allDone = false;
+    });
+    if (allDone) clearInterval(interval);
+  }, 200);
+  setTimeout(function() { clearInterval(interval); }, 10000);
+});
+</script>
+
+<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
 Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
 </p>')
 ```
