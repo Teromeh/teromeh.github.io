@@ -24,6 +24,7 @@ format:
 library(plotly)
 library(dplyr)
 library(tidyr)
+library(jsonlite)
 
 #   agea     - age of respondent (numeric)
 #   ppltrst  - most people can be trusted (0-10)
@@ -50,10 +51,6 @@ darken_hex <- function(hex, factor = 0.8) {
 }
 ess_red_dark <- darken_hex(ess_red, factor = 0.8)
 
-# Deeper maroon for hover tooltips - dark enough to keep white text legible,
-# while still reading as part of the red palette.
-ess_red_hover <- darken_hex(ess_red, factor = 0.45)
-
 country_names <- c(
   AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
   CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
@@ -72,7 +69,7 @@ cntry_codes <- cntry_codes[name_order]
 cntry_labels <- cntry_labels[name_order]
 
 groups <- c("All", cntry_codes)
-group_labels <- c("All countries", cntry_labels)
+group_labels <- c("All", cntry_labels)
 
 ppltrst_by_country <- lapply(groups, function(g) {
   d <- if (g == "All") data else data |> filter(cntry == g)
@@ -111,13 +108,8 @@ total_n_fair <- vapply(pplfair_by_country, function(d) sum(d$n), numeric(1))
 bar_colors_by_country_fair <- lapply(pplfair_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
 })
-```
 
-## Row
-
-```{r}
-#| label: ppltrst-bar
-initial <- ppltrst_by_country[[1]]
+# Annotation helpers
 
 avg_annotation <- function(avg) {
   list(
@@ -153,25 +145,126 @@ avg_annotation_fair <- function(avg) {
   )
 }
 
-buttons <- lapply(seq_along(groups), function(i) {
-  d <- ppltrst_by_country[[i]]
-  list(
-    method = "update",
-    args = list(
-      list(
-        x = list(I(as.character(d$ppltrst))),
-        y = list(I(d$percentage)),
-        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents"))),
-        "marker.color" = list(I(bar_colors_by_country[[i]]))
-      ),
-      list(
-        annotations = list(avg_annotation(avg_scores[i]), n_annotation(total_n[i]))
-      )
-    ),
-    label = group_labels[i]
-  )
-})
+# Pre-compute the full per-country trace + annotation data
+
+build_group_data <- function(by_country, avg_scores, total_n, bar_colors, avg_annotation_fn) {
+  lapply(seq_along(groups), function(i) {
+    d <- by_country[[i]]
+    list(
+      x = I(as.character(d[[1]])),
+      y = I(d$percentage),
+      text = I(paste0("<b>", d$percentage, "%</b>")),
+      hovertext = I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents")),
+      marker_color = I(bar_colors[[i]]),
+      annotations = list(avg_annotation_fn(avg_scores[i]), n_annotation(total_n[i]))
+    )
+  })
+}
+
+trust_group_data <- build_group_data(ppltrst_by_country, avg_scores, total_n,
+                                      bar_colors_by_country, avg_annotation)
+fair_group_data <- build_group_data(pplfair_by_country, avg_scores_fair, total_n_fair,
+                                     bar_colors_by_country_fair, avg_annotation_fair)
+
+# --- Write the sidebar-filter logic to a standalone .js file (loaded via <script src>
+#     in the sidebar below) rather than inlining it as raw HTML in the markdown, which
+#     is more reliable for a script this size and much easier to debug in dev tools. ---
+
+filter_js <- paste0(
+  "window.essTrustData = ", as.character(jsonlite::toJSON(trust_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essFairData = ", as.character(jsonlite::toJSON(fair_group_data, auto_unbox = TRUE)), ";\n",
+  "
+function essFindGraphDiv(preferredId, positionIndex) {
+  var el = document.getElementById(preferredId);
+  if (el && el.data) return el;
+
+  var all = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot'));
+  var byId = all.find(function (e) { return e.id && e.id.indexOf(preferredId) !== -1; });
+  if (byId) return byId;
+
+  if (all.length > positionIndex) return all[positionIndex];
+  return null;
+}
+
+function essSetNavbarHeightVar() {
+  var navbar = document.querySelector('.navbar');
+  var h = navbar ? navbar.offsetHeight : 72;
+  document.documentElement.style.setProperty('--ess-navbar-height', h + 'px');
+}
+essSetNavbarHeightVar();
+window.addEventListener('resize', essSetNavbarHeightVar);
+window.addEventListener('load', essSetNavbarHeightVar);
+
+window.essUpdateCountry = function (idx) {
+  try {
+    var t = window.essTrustData[idx];
+    var f = window.essFairData[idx];
+    var trustEl = essFindGraphDiv('ppltrst-bar', 0);
+    var fairEl = essFindGraphDiv('pplfair-bar', 1);
+    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null);
+
+    if (t && trustEl) {
+      Plotly.restyle(trustEl, {
+        x: [t.x], y: [t.y], text: [t.text],
+        hovertext: [t.hovertext], 'marker.color': [t.marker_color]
+      }, [0]);
+      Plotly.relayout(trustEl, { annotations: t.annotations });
+    }
+    if (f && fairEl) {
+      Plotly.restyle(fairEl, {
+        x: [f.x], y: [f.y], text: [f.text],
+        hovertext: [f.hovertext], 'marker.color': [f.marker_color]
+      }, [0]);
+      Plotly.relayout(fairEl, { annotations: f.annotations });
+    }
+  } catch (err) {
+    console.error('ESS country filter update failed:', err);
+  }
+};
+
+document.addEventListener('change', function (e) {
+  if (e.target && e.target.id === 'country-select') {
+    console.log('[ess-filter] country-select changed to index', e.target.value);
+    window.essUpdateCountry(parseInt(e.target.value, 10));
+  }
+});
+
+console.log('[ess-filter] country-filter.js loaded OK,', window.essTrustData.length, 'countries available.');
+console.log('[ess-filter] plotly divs on page:', Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot')).map(function (e) { return e.id; }));
+"
+)
+
+writeLines(filter_js, "country-filter.js")
+```
+
+## {.sidebar}
+
+```{r}
+#| label: country-filter
+#| output: asis
+options_html <- paste0(
+  '<option value="', seq_along(groups) - 1, '">', group_labels, '</option>',
+  collapse = "\n"
+)
+
+cat(paste0(
+  '<div class="ess-filter">',
+  '<label for="country-select">Country</label>',
+  '<select id="country-select" class="form-select">',
+  options_html,
+  '</select>',
+  '</div>',
+  '<script src="country-filter.js"></script>'
+))
+```
+
+## Column
+
+### Row
+
+```{r}
+#| label: ppltrst-bar
+initial <- ppltrst_by_country[[1]]
 
 plot_ly(elementId = "ppltrst-bar") |>
   add_trace(
@@ -196,23 +289,12 @@ plot_ly(elementId = "ppltrst-bar") |>
       x = 0
     ),
     annotations = list(avg_annotation(avg_scores[1]), n_annotation(total_n[1])),
-    updatemenus = list(list(
-      type = "dropdown",
-      buttons = buttons,
-      x = 1,
-      y = 1.2,
-      xanchor = "right",
-      bgcolor = "#ffffff",
-      bordercolor = "#dddddd",
-      borderwidth = 1,
-      pad = list(l = 12, r = 12, t = 6, b = 6),
-      font = list(family = "Inter, sans-serif", size = 12, color = "#333333")
-    )),
+    margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = ess_red_hover,
-      bordercolor = ess_red_hover,
+      bgcolor = "#333333",
+      bordercolor = "#333333",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = list(text = "Trust level (0 - 10)",
@@ -230,31 +312,11 @@ plot_ly(elementId = "ppltrst-bar") |>
   config(displayModeBar = FALSE)
 ```
 
-## Row
+### Row
 
 ```{r}
 #| label: pplfair-bar
 initial_fair <- pplfair_by_country[[1]]
-
-buttons_fair <- lapply(seq_along(groups), function(i) {
-  d <- pplfair_by_country[[i]]
-  list(
-    method = "update",
-    args = list(
-      list(
-        x = list(I(as.character(d$pplfair))),
-        y = list(I(d$percentage)),
-        text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents"))),
-        "marker.color" = list(I(bar_colors_by_country_fair[[i]]))
-      ),
-      list(
-        annotations = list(avg_annotation_fair(avg_scores_fair[i]), n_annotation(total_n_fair[i]))
-      )
-    ),
-    label = group_labels[i]
-  )
-})
 
 plot_ly(elementId = "pplfair-bar") |>
   add_trace(
@@ -279,23 +341,12 @@ plot_ly(elementId = "pplfair-bar") |>
       x = 0
     ),
     annotations = list(avg_annotation_fair(avg_scores_fair[1]), n_annotation(total_n_fair[1])),
-    updatemenus = list(list(
-      type = "dropdown",
-      buttons = buttons_fair,
-      x = 1,
-      y = 1.2,
-      xanchor = "right",
-      bgcolor = "#ffffff",
-      bordercolor = "#dddddd",
-      borderwidth = 1,
-      pad = list(l = 12, r = 12, t = 6, b = 6),
-      font = list(family = "Inter, sans-serif", size = 12, color = "#333333")
-    )),
+    margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = ess_red_hover,
-      bordercolor = ess_red_hover,
+      bgcolor = "#333333",
+      bordercolor = "#333333",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = list(text = "Fairness level (0 - 10)",
@@ -313,80 +364,12 @@ plot_ly(elementId = "pplfair-bar") |>
   config(displayModeBar = FALSE)
 ```
 
-## Column
+### Row
 
 ```{r}
 #| label: footer
 #| output: asis
-cat('
-<style>
-.ess-filter-select {
-  font-family: Inter, sans-serif;
-  font-size: 12px;
-  color: #333333;
-  background-color: #ffffff;
-  border: 1px solid #dddddd;
-  border-radius: 4px;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-</style>
-
-<script>
-// Plotly\'s built-in dropdown (updatemenus) renders its scrollable list in
-// SVG, and its wheel-scroll handling does not reliably stop the event from
-// bubbling up to the page - so scrolling inside the list also scrolls the
-// whole dashboard. Native <select> elements do not have this problem, so we
-// build one from the same button/args data Plotly already has, wire it to
-// call the identical Plotly.update(), and hide the original dropdown.
-function essReplaceDropdown(id) {
-  var gd = document.getElementById(id);
-  if (!gd || !gd.layout || !gd.layout.updatemenus || gd.dataset.essFilterReady) return;
-  gd.dataset.essFilterReady = "1";
-
-  var buttons = gd.layout.updatemenus[0].buttons;
-
-  var select = document.createElement("select");
-  select.className = "ess-filter-select";
-  buttons.forEach(function(btn, i) {
-    var opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = btn.label;
-    select.appendChild(opt);
-  });
-
-  select.addEventListener("change", function() {
-    var btn = buttons[select.selectedIndex];
-    Plotly.update(gd, btn.args[0], btn.args[1]);
-  });
-
-  var wrapper = document.createElement("div");
-  wrapper.style.textAlign = "right";
-  wrapper.style.marginBottom = "4px";
-  wrapper.appendChild(select);
-
-  gd.parentElement.insertBefore(wrapper, gd);
-  Plotly.relayout(gd, {"updatemenus[0].visible": false});
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-  var ids = ["ppltrst-bar", "pplfair-bar"];
-  var interval = setInterval(function() {
-    var allDone = true;
-    ids.forEach(function(id) {
-      var gd = document.getElementById(id);
-      if (gd && gd.layout && gd.layout.updatemenus) {
-        essReplaceDropdown(id);
-      }
-      if (!gd || !gd.dataset.essFilterReady) allDone = false;
-    });
-    if (allDone) clearInterval(interval);
-  }, 200);
-  setTimeout(function() { clearInterval(interval); }, 10000);
-});
-</script>
-
-<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: <a href="https://https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
 </p>')
 ```

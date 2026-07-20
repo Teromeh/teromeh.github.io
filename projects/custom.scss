@@ -22,6 +22,10 @@ $card-border-color: transparent;
 $card-border-radius: 8px;
 
 /*-- scss:rules --*/
+:root {
+  --ess-navbar-height: 72px; /* fallback; overridden precisely by JS on page load */
+}
+
 .navbar {
   position: fixed;
   top: 0;
@@ -45,4 +49,44 @@ $card-border-radius: 8px;
 /* Force Plotly to use pointer when hovering */
 .js-plotly-plot .nsewdrag {
   cursor: default !important;
+}
+
+/* Sidebar country filter: sticky, pinned exactly below the (fixed) navbar using its
+   measured height, so it stays visible and gray-filled for the whole page as you scroll. */
+.quarto-dashboard .sidebar {
+  position: sticky !important;
+  top: var(--ess-navbar-height) !important;
+  height: calc(100vh - var(--ess-navbar-height)) !important;
+  overflow-y: auto !important;
+  padding: 24px 1.25rem 1.5rem !important;
+}
+
+/* Hide bslib's built-in sidebar collapse/expand arrow */
+.collapse-toggle {
+  display: none !important;
+}
+
+.ess-filter {
+  margin-bottom: 1rem;
+}
+
+.ess-filter label {
+  display: block;
+  font-family: "Outfit", sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+#country-select.form-select {
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  padding: 0.4rem 2rem 0.4rem 0.75rem !important;
+  line-height: 1.5 !important;
+}
+
+#country-select.form-select:focus {
+  border-color: $primary;
+  box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
 }
