@@ -1,5 +1,5 @@
 ---
-title: "The European Social Survey, round 11 - Trust"
+title: "The European Social Survey, round 11 (2023/2024) - Trust"
 format: 
   dashboard:
     theme:
@@ -109,6 +109,25 @@ bar_colors_by_country_fair <- lapply(pplfair_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
 })
 
+pplhlp_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(pplhlp)) |>
+    count(pplhlp) |>
+    mutate(percentage = round(n / sum(n) * 100, 0),
+           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
+})
+
+avg_scores_help <- vapply(pplhlp_by_country, function(d) {
+  round(weighted.mean(d$pplhlp, w = d$n), 1)
+}, numeric(1))
+
+total_n_help <- vapply(pplhlp_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_help <- lapply(pplhlp_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
 # Annotation helpers
 
 avg_annotation <- function(avg) {
@@ -145,6 +164,17 @@ avg_annotation_fair <- function(avg) {
   )
 }
 
+avg_annotation_help <- function(avg) {
+  list(
+    text = paste0("Average helpfulness level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
 # Pre-compute the full per-country trace + annotation data
 
 build_group_data <- function(by_country, avg_scores, total_n, bar_colors, avg_annotation_fn) {
@@ -165,14 +195,13 @@ trust_group_data <- build_group_data(ppltrst_by_country, avg_scores, total_n,
                                       bar_colors_by_country, avg_annotation)
 fair_group_data <- build_group_data(pplfair_by_country, avg_scores_fair, total_n_fair,
                                      bar_colors_by_country_fair, avg_annotation_fair)
-
-# --- Write the sidebar-filter logic to a standalone .js file (loaded via <script src>
-#     in the sidebar below) rather than inlining it as raw HTML in the markdown, which
-#     is more reliable for a script this size and much easier to debug in dev tools. ---
+help_group_data <- build_group_data(pplhlp_by_country, avg_scores_help, total_n_help,
+                                     bar_colors_by_country_help, avg_annotation_help)
 
 filter_js <- paste0(
   "window.essTrustData = ", as.character(jsonlite::toJSON(trust_group_data, auto_unbox = TRUE)), ";\n",
   "window.essFairData = ", as.character(jsonlite::toJSON(fair_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essHelpData = ", as.character(jsonlite::toJSON(help_group_data, auto_unbox = TRUE)), ";\n",
   "
 function essFindGraphDiv(preferredId, positionIndex) {
   var el = document.getElementById(preferredId);
@@ -199,9 +228,11 @@ window.essUpdateCountry = function (idx) {
   try {
     var t = window.essTrustData[idx];
     var f = window.essFairData[idx];
+    var h = window.essHelpData[idx];
     var trustEl = essFindGraphDiv('ppltrst-bar', 0);
     var fairEl = essFindGraphDiv('pplfair-bar', 1);
-    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null);
+    var helpEl = essFindGraphDiv('pplhlp-bar', 2);
+    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null);
 
     if (t && trustEl) {
       Plotly.restyle(trustEl, {
@@ -216,6 +247,13 @@ window.essUpdateCountry = function (idx) {
         hovertext: [f.hovertext], 'marker.color': [f.marker_color]
       }, [0]);
       Plotly.relayout(fairEl, { annotations: f.annotations });
+    }
+    if (h && helpEl) {
+      Plotly.restyle(helpEl, {
+        x: [h.x], y: [h.y], text: [h.text],
+        hovertext: [h.hovertext], 'marker.color': [h.marker_color]
+      }, [0]);
+      Plotly.relayout(helpEl, { annotations: h.annotations });
     }
   } catch (err) {
     console.error('ESS country filter update failed:', err);
@@ -233,7 +271,6 @@ console.log('[ess-filter] country-filter.js loaded OK,', window.essTrustData.len
 console.log('[ess-filter] plotly divs on page:', Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot')).map(function (e) { return e.id; }));
 "
 )
-
 writeLines(filter_js, "country-filter.js")
 ```
 
@@ -293,8 +330,8 @@ plot_ly(elementId = "ppltrst-bar") |>
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = list(text = "Trust level (0 - 10)",
@@ -345,8 +382,8 @@ plot_ly(elementId = "pplfair-bar") |>
     showlegend = FALSE,
     dragmode = FALSE,
     hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = list(text = "Fairness level (0 - 10)",
@@ -364,6 +401,57 @@ plot_ly(elementId = "pplfair-bar") |>
   config(displayModeBar = FALSE)
 ```
 
+### Row
+
+```{r}
+#| label: pplhlp-bar
+initial_help <- pplhlp_by_country[[1]]
+
+plot_ly(elementId = "pplhlp-bar") |>
+  add_trace(
+    data = initial_help,
+    x = ~factor(pplhlp, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_help[[1]]),
+    text = ~paste0("<b>", percentage, "%</b>"),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Most People Try to Be Helpful</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: People mostly look out for themselves, 10: People mostly try to be helpful)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_help(avg_scores_help[1]), n_annotation(total_n_help[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Helpfulness level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 tickmode = "linear", dtick = 1,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 40)),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
 ### Row
 
 ```{r}

@@ -51,8 +51,7 @@ $card-border-radius: 8px;
   cursor: default !important;
 }
 
-/* Sidebar country filter: sticky, pinned exactly below the (fixed) navbar using its
-   measured height, so it stays visible and gray-filled for the whole page as you scroll. */
+/* ESS Sidebar country filter: sticky, pinned below the fixed navbar */
 .quarto-dashboard .sidebar {
   position: sticky !important;
   top: var(--ess-navbar-height) !important;
