@@ -146,7 +146,7 @@ plot_ly(party_data,
              showgrid = FALSE,
              showline = FALSE,
              zeroline = FALSE,
-             showticklabels = FALSE),
+             showticklabels = FALSE, fixedrange = TRUE),
     yaxis = list(title = "",
              showgrid = FALSE,
              showline = FALSE,
@@ -155,7 +155,8 @@ plot_ly(party_data,
              ticklen = 10,
              tickcolor = "rgba(0,0,0,0)",
              tickfont = list(color = "#1a1a1a", size = 14, 
-                             family = "Inter, sans-serif")
+                             family = "Inter, sans-serif"),
+             fixedrange = TRUE
              ),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
@@ -199,9 +200,9 @@ plot_ly(age_all,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10, fixedrange = TRUE),
     yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
     annotations = list(
@@ -241,9 +242,9 @@ plot_ly(age_elected,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10),
+                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10, fixedrange = TRUE),
     yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13)),
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
     annotations = list(
@@ -285,14 +286,15 @@ plot_ly(occupation_all,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showline = FALSE, showticklabels = FALSE),
+                 showline = FALSE, showticklabels = FALSE, fixedrange = TRUE),
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE,
                  ticklabelposition = "outside",
                  ticklen = 10,
                  tickcolor = "rgba(0,0,0,0)",
                  tickfont = list(color = "#1a1a1a", size = 13,
-                                 family = "Inter, sans-serif")),
+                                 family = "Inter, sans-serif"),
+                 fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
     annotations = lapply(1:nrow(occupation_all), function(i) {
@@ -335,14 +337,15 @@ plot_ly(occupation_elected,
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showline = FALSE, showticklabels = FALSE),
+                 showline = FALSE, showticklabels = FALSE, fixedrange = TRUE),
     yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
                  zeroline = FALSE,
                  ticklabelposition = "outside",
                  ticklen = 10,
                  tickcolor = "rgba(0,0,0,0)",
                  tickfont = list(color = "#1a1a1a", size = 13,
-                                 family = "Inter, sans-serif")),
+                                 family = "Inter, sans-serif"),
+                 fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
     annotations = lapply(1:nrow(occupation_elected), function(i) {
@@ -405,8 +408,8 @@ plot_ly() |>
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100)),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+                 showticklabels = FALSE, range = c(0, 100), fixedrange = TRUE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE, fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
@@ -456,8 +459,8 @@ plot_ly() |>
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100)),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE),
+                 showticklabels = FALSE, range = c(0, 100), fixedrange = TRUE),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE, fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
@@ -473,7 +476,3 @@ cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; 
 Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a>
 </p>')
 ```
-
-
-
-
