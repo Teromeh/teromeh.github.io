@@ -76,8 +76,8 @@ ppltrst_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(ppltrst)) |>
     count(ppltrst) |>
-    mutate(percentage = round(n / sum(n) * 100, 0),
-           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
 })
 
 avg_scores <- vapply(ppltrst_by_country, function(d) {
@@ -95,8 +95,8 @@ pplfair_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(pplfair)) |>
     count(pplfair) |>
-    mutate(percentage = round(n / sum(n) * 100, 0),
-           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
 })
 
 avg_scores_fair <- vapply(pplfair_by_country, function(d) {
@@ -114,8 +114,8 @@ pplhlp_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(pplhlp)) |>
     count(pplhlp) |>
-    mutate(percentage = round(n / sum(n) * 100, 0),
-           percentage_precise = sprintf("%.1f", n / sum(n) * 100))
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
 })
 
 avg_scores_help <- vapply(pplhlp_by_country, function(d) {
@@ -329,6 +329,7 @@ plot_ly(elementId = "ppltrst-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
+    hovermode = "x",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -388,6 +389,7 @@ plot_ly(elementId = "pplfair-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
+    hovermode = "x",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -447,6 +449,7 @@ plot_ly(elementId = "pplhlp-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
+    hovermode = "x",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
