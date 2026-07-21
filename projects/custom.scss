@@ -83,9 +83,10 @@ $card-border-radius: 8px;
   font-weight: 400 !important;
   padding: 0.4rem 2rem 0.4rem 0.75rem !important;
   line-height: 1.5 !important;
+  border-color: rgba(237, 61, 66, 0.35); /* muted echo of ess_red */
 }
 
 #country-select.form-select:focus {
-  border-color: $primary;
-  box-shadow: 0 0 0 0.2rem rgba(0, 188, 212, 0.25);
+  border-color: rgba(237, 61, 66, 0.6);
+  box-shadow: none;
 }
