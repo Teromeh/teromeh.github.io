@@ -24,9 +24,12 @@ format:
 library(plotly)
 library(dplyr)
 library(DT)
+library(jsonlite)
 
 data <- readRDS("election-data-2025.rds")
 elected <- readRDS("elected.rds")
+map_source <- readRDS("election-data-2025-municipalities.rds")
+kunta_geo <- fromJSON("kuntarajat.geojson", simplifyVector = FALSE)
 
 party_colors <- c(
   "SDP" = "#F54B4B",
@@ -52,6 +55,37 @@ party_data <- data |>
     label = paste0(format(round(percentage, 1), decimal.mark = ","), " %"),
     party_bold = paste0("<b>", puolueen_ryhman_nimilyhenne_suomeksi, "</b>")
   )
+
+map_data <- map_source |>
+  group_by(kotikunnan_nimi_suomeksi, puolueen_ryhman_nimilyhenne_suomeksi) |>
+  summarise(aanet = sum(aanet_yhteensa_lkm, na.rm = TRUE), .groups = "drop") |>
+  group_by(kotikunnan_nimi_suomeksi) |>
+  slice_max(aanet, n = 1, with_ties = FALSE) |>
+  ungroup()
+
+# Municipalities won by a party outside the main party_colors list (e.g. local
+# lists) keep their own unique name for the hover text, but are still filled
+# black like the rest, matching the original "Muut" color.
+map_data <- map_data |>
+  mutate(map_color = ifelse(
+    puolueen_ryhman_nimilyhenne_suomeksi %in% names(party_colors),
+    unname(party_colors[puolueen_ryhman_nimilyhenne_suomeksi]),
+    "#000000"
+  ))
+
+map_color_order <- unique(map_data$map_color)
+map_n_colors <- length(map_color_order)
+
+map_data <- map_data |>
+  mutate(color_index = match(map_color, map_color_order) - 1)
+
+map_colorscale <- do.call(c, lapply(seq_len(map_n_colors), function(i) {
+  col <- map_color_order[i]
+  list(
+    list((i - 1) / map_n_colors, col),
+    list(i / map_n_colors, col)
+  )
+}))
 
 age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
@@ -112,7 +146,7 @@ avg_age_elected <- elected |>
 
 
 
-## Row
+## Row {height="550px"}
 
 ### Column
 
@@ -176,6 +210,47 @@ plot_ly(party_data,
   config(displayModeBar = FALSE)
 ```
 
+### Column
+
+```{r}
+#| label: party-map
+plot_ly(
+  map_data,
+  type = "choropleth",
+  geojson = kunta_geo,
+  locations = ~kotikunnan_nimi_suomeksi,
+  featureidkey = "properties.NAMEFIN",
+  z = ~color_index,
+  zmin = 0, zmax = map_n_colors,
+  colorscale = map_colorscale,
+  marker = list(line = list(color = "white", width = 0.4)),
+  hovertext = ~paste0("<b>", kotikunnan_nimi_suomeksi, "</b><br>",
+                       puolueen_ryhman_nimilyhenne_suomeksi, ": ",
+                       format(aanet, big.mark = " "), " ääntä"),
+  hoverinfo = "text",
+  showscale = FALSE
+) |>
+  layout(
+    title = list(text = "<b>Suurin puolue kunnittain</b>", font = title_font, x = 0),
+    geo = list(
+      visible = FALSE,
+      fitbounds = "locations",
+      projection = list(type = "mercator"),
+      bgcolor = "rgba(0,0,0,0)"
+    ),
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, b = 0, l = 0, r = 0)
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
 ## Row
 
 ### Column
@@ -199,10 +274,18 @@ plot_ly(age_all,
       bordercolor = "#333333",
       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
     ),
-    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10, fixedrange = TRUE),
-    yaxis = list(title = "Ehdokkaiden määrä", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
+    xaxis = list(title = "Ikä", 
+                 showgrid = FALSE, 
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13), 
+                 dtick = 10, 
+                 fixedrange = TRUE),
+    yaxis = list(title = "Ehdokkaiden määrä", 
+                 showgrid = FALSE, 
+                 showline = FALSE,
+                 zeroline = FALSE, 
+                 tickfont = list(family = "Inter, sans-serif", size = 13), 
+                 fixedrange = TRUE), 
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
     annotations = list(
@@ -473,6 +556,7 @@ plot_ly() |>
 #| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a>
+Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a> ·
+Kuntarajat: <a href="https://github.com/samilaine/hallinnollisetrajat" target="_blank" style="color: #555555; text-decoration: underline;">Maanmittauslaitos (CC BY 4.0)</a>
 </p>')
 ```
