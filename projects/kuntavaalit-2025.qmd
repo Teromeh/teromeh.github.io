@@ -557,6 +557,6 @@ plot_ly() |>
 #| output: asis
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
 Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a> ·
-Kuntarajat: <a href="https://github.com/samilaine/hallinnollisetrajat" target="_blank" style="color: #555555; text-decoration: underline;">Maanmittauslaitos (CC BY 4.0)</a>
+Kuntarajat: <a href="https://asiointi.maanmittauslaitos.fi/karttapaikka/tiedostopalvelu?lang=fi" target="_blank" style="color: #555555; text-decoration: underline;">Maanmittauslaitos</a>
 </p>')
 ```
