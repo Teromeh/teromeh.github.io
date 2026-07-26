@@ -75,6 +75,24 @@ map_data <- map_data |>
     "#000000"
   ))
 
+# Dark dots (e.g. KOK, PS, Muut) get a thin white halo so they stay visible
+# against the dark hover tooltip background; brighter colors are left as is.
+map_data <- map_data |>
+  rowwise() |>
+  mutate(
+    dot_luminance = {
+      rgb_vals <- col2rgb(map_color)
+      0.299 * rgb_vals[1] + 0.587 * rgb_vals[2] + 0.114 * rgb_vals[3]
+    },
+    dot_style = paste0(
+      "color:", map_color, ";",
+      if (dot_luminance < 70)
+        " text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;"
+      else ""
+    )
+  ) |>
+  ungroup()
+
 map_color_order <- unique(map_data$map_color)
 map_n_colors <- length(map_color_order)
 
@@ -173,6 +191,7 @@ plot_ly(party_data,
     hoverlabel = list(
       bgcolor = "#333333",
       bordercolor = "#333333",
+      align = "left",
       font = list(color = "#ffffff", 
                   family = "Inter, sans-serif",
                   size = 13)
@@ -227,6 +246,8 @@ plot_ly(
   colorscale = map_colorscale,
   marker = list(line = list(color = "white", width = 0.4)),
   hovertext = ~paste0("<b>", kotikunnan_nimi_suomeksi, "</b><br>",
+                       "<span style='", dot_style,
+                       " font-size:16px; vertical-align:middle;'>●</span> ",
                        puolueen_ryhman_nimilyhenne_suomeksi, ": ",
                        format(round(osuus, 1), decimal.mark = ","), " % · ",
                        format(aanet, big.mark = " ", trim = TRUE), " ääntä"),
