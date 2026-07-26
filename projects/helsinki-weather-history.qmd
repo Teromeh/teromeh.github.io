@@ -1,0 +1,29 @@
+---
+title: "Helsinki Weather History"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+## Row
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" style="color: #555555; text-decoration: underline;">Ilmatieteen laitos (FMI)</a>
+</p>')
+```
