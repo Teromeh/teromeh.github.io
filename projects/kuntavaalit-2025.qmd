@@ -60,8 +60,10 @@ map_data <- map_source |>
   group_by(kotikunnan_nimi_suomeksi, puolueen_ryhman_nimilyhenne_suomeksi) |>
   summarise(aanet = sum(aanet_yhteensa_lkm, na.rm = TRUE), .groups = "drop") |>
   group_by(kotikunnan_nimi_suomeksi) |>
+  mutate(kunta_aanet_yhteensa = sum(aanet)) |>
   slice_max(aanet, n = 1, with_ties = FALSE) |>
-  ungroup()
+  ungroup() |>
+  mutate(osuus = (aanet / kunta_aanet_yhteensa) * 100)
 
 # Municipalities won by a party outside the main party_colors list (e.g. local
 # lists) keep their own unique name for the hover text, but are still filled
@@ -101,7 +103,7 @@ gender_all <- data |>
   mutate(
     total = sum(maara),
     percentage = (maara / total) * 100,
-    label = paste0(format(maara, big.mark = " "), " (",
+    label = paste0(format(maara, big.mark = " ", trim = TRUE), " (",
                    format(round(percentage, 1), decimal.mark = ","), " %)")
   )
 
@@ -111,7 +113,7 @@ gender_elected <- elected |>
   mutate(
     total = sum(maara),
     percentage = (maara / total) * 100,
-    label = paste0(format(maara, big.mark = " "), " (",
+    label = paste0(format(maara, big.mark = " ", trim = TRUE), " (",
                    format(round(percentage, 1), decimal.mark = ","), " %)")
   )
 
@@ -122,7 +124,7 @@ occupation_all <- data |>
   count(ammatti, name = "maara") |>
   arrange(desc(maara)) |>
   head(10) |>
-  mutate(label = format(maara, big.mark = " "))
+  mutate(label = format(maara, big.mark = " ", trim = TRUE))
 
 occupation_elected <- elected |>
   mutate(ammatti = trimws(ammatti)) |>
@@ -131,7 +133,7 @@ occupation_elected <- elected |>
   count(ammatti, name = "maara") |>
   arrange(desc(maara)) |>
   head(10) |>
-  mutate(label = format(maara, big.mark = " "))
+  mutate(label = format(maara, big.mark = " ", trim = TRUE))
 
 avg_age_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, .keep_all = TRUE) |>
@@ -162,7 +164,7 @@ plot_ly(party_data,
         hovertext = ~paste0(puolueen_ryhman_nimilyhenne_suomeksi, ": ",
                     format(round(percentage, 1), decimal.mark = ","), " %",
                     "<br>Ääniä yhteensä: ", 
-                    format(total_votes, big.mark = " ")),
+                    format(total_votes, big.mark = " ", trim = TRUE)),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Äänijakauma - Puolueet</b>", font = title_font, x = 0),
@@ -226,7 +228,8 @@ plot_ly(
   marker = list(line = list(color = "white", width = 0.4)),
   hovertext = ~paste0("<b>", kotikunnan_nimi_suomeksi, "</b><br>",
                        puolueen_ryhman_nimilyhenne_suomeksi, ": ",
-                       format(aanet, big.mark = " "), " ääntä"),
+                       format(round(osuus, 1), decimal.mark = ","), " % · ",
+                       format(aanet, big.mark = " ", trim = TRUE), " ääntä"),
   hoverinfo = "text",
   showscale = FALSE
 ) |>
@@ -357,7 +360,7 @@ plot_ly(occupation_all,
         type = "bar",
         orientation = "h",
         marker = list(color = "#004677"),
-        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " ehdokasta"),
+        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Kaikki ehdokkaat</b>", font = title_font, x = 0),
@@ -408,7 +411,7 @@ plot_ly(occupation_elected,
         type = "bar",
         orientation = "h",
         marker = list(color = "#C0392B"),
-        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " "), " valittua"),
+        hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " valittua"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Valitut ehdokkaat</b>", font = title_font, x = 0),
