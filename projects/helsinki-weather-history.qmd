@@ -14,10 +14,9 @@ format:
         <style>
           body { padding-top: 60px !important; }
           .quarto-dashboard .card:first-child { margin-top: 0 !important; }
-          .value-box-value { font-size: 1.6rem !important; line-height: 1.2 !important; white-space: nowrap; }
-          .value-box-title { font-size: 0.85rem !important; }
-          .kpi-extreme-box, .kpi-extreme-box .value-box-title, .kpi-extreme-box .value-box-value,
-          .kpi-extreme-box svg, .kpi-extreme-box .bi { color: #ffffff !important; fill: #ffffff !important; }
+          .value-box-value { font-size: 1.6rem !important; line-height: 1.2 !important; white-space: nowrap; color: #ffffff !important; }
+          .value-box-title { font-size: 0.85rem !important; color: #ffffff !important; }
+          .bslib-value-box svg, .bslib-value-box .bi { color: #ffffff !important; fill: #ffffff !important; }
         </style>
     nav-buttons:
       - icon: envelope
@@ -67,7 +66,6 @@ overall_avg_precip <- mean(annual$total_precip, na.rm = TRUE)
 #| title: "Coldest year (average temperature)"
 #| icon: thermometer-snow
 #| color: "#1B3A5C"
-#| classes: "kpi-extreme-box"
 list(value = paste0(coldest$vuosi, " · ", format(round(coldest$mean_temp, 1), decimal.mark = ","), " °C"))
 ```
 
@@ -76,7 +74,6 @@ list(value = paste0(coldest$vuosi, " · ", format(round(coldest$mean_temp, 1), d
 #| title: "Hottest year (average temperature)"
 #| icon: thermometer-sun
 #| color: "#8C2F39"
-#| classes: "kpi-extreme-box"
 list(value = paste0(hottest$vuosi, " · ", format(round(hottest$mean_temp, 1), decimal.mark = ","), " °C"))
 ```
 
@@ -84,7 +81,7 @@ list(value = paste0(hottest$vuosi, " · ", format(round(hottest$mean_temp, 1), d
 #| content: valuebox
 #| title: "Yearly average"
 #| icon: thermometer-half
-#| color: secondary
+#| color: "#4A4A4A"
 list(value = paste0(format(round(overall_avg, 1), decimal.mark = ","), " °C"))
 ```
 
@@ -142,7 +139,6 @@ plot_ly(annual,
 #| title: "Driest year (total rainfall)"
 #| icon: brightness-high
 #| color: "#8A5A22"
-#| classes: "kpi-extreme-box"
 list(value = paste0(driest$vuosi, " · ", format(round(driest$total_precip)), " mm"))
 ```
 
@@ -151,7 +147,6 @@ list(value = paste0(driest$vuosi, " · ", format(round(driest$total_precip)), " 
 #| title: "Wettest year (total rainfall)"
 #| icon: cloud-rain-heavy
 #| color: "#155E75"
-#| classes: "kpi-extreme-box"
 list(value = paste0(wettest$vuosi, " · ", format(round(wettest$total_precip)), " mm"))
 ```
 
@@ -159,7 +154,7 @@ list(value = paste0(wettest$vuosi, " · ", format(round(wettest$total_precip)), 
 #| content: valuebox
 #| title: "Yearly average"
 #| icon: droplet-half
-#| color: secondary
+#| color: "#4A4A4A"
 list(value = paste0(format(round(overall_avg_precip)), " mm"))
 ```
 
