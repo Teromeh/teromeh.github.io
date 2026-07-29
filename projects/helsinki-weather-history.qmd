@@ -11,6 +11,14 @@ format:
         <link rel="icon" href="favicon.svg" type="image/svg+xml">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        <style>
+          body { padding-top: 60px !important; }
+          .quarto-dashboard .card:first-child { margin-top: 0 !important; }
+          .value-box-value { font-size: 1.6rem !important; line-height: 1.2 !important; white-space: nowrap; }
+          .value-box-title { font-size: 0.85rem !important; }
+          .kpi-extreme-box, .kpi-extreme-box .value-box-title, .kpi-extreme-box .value-box-value,
+          .kpi-extreme-box svg, .kpi-extreme-box .bi { color: #ffffff !important; fill: #ffffff !important; }
+        </style>
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -18,12 +26,183 @@ format:
         href: ../
 ---
 
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+library(lubridate)
+
+data <- readRDS("helsinki-weather-history.rds")
+
+annual <- data |>
+  group_by(vuosi) |>
+  summarise(
+    mean_temp    = mean(kuukauden_keskilampotila_c, na.rm = TRUE),
+    total_precip = sum(kuukauden_sadesumma_mm, na.rm = TRUE),
+    n_months     = n(),
+    .groups = "drop"
+  ) |>
+  filter(n_months == 12) |>
+  arrange(vuosi)
+
+temp_trend <- lm(mean_temp ~ vuosi, data = annual)
+annual$trend_temp <- fitted(temp_trend)
+
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+coldest <- annual |> slice_min(mean_temp, n = 1, with_ties = FALSE)
+hottest <- annual |> slice_max(mean_temp, n = 1, with_ties = FALSE)
+overall_avg <- mean(annual$mean_temp, na.rm = TRUE)
+
+driest <- annual |> slice_min(total_precip, n = 1, with_ties = FALSE)
+wettest <- annual |> slice_max(total_precip, n = 1, with_ties = FALSE)
+overall_avg_precip <- mean(annual$total_precip, na.rm = TRUE)
+```
+
+## Row {height="110px"}
+
+```{r}
+#| content: valuebox
+#| title: "Coldest year (average temperature)"
+#| icon: thermometer-snow
+#| color: "#1B3A5C"
+#| classes: "kpi-extreme-box"
+list(value = paste0(coldest$vuosi, " · ", format(round(coldest$mean_temp, 1), decimal.mark = ","), " °C"))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Hottest year (average temperature)"
+#| icon: thermometer-sun
+#| color: "#8C2F39"
+#| classes: "kpi-extreme-box"
+list(value = paste0(hottest$vuosi, " · ", format(round(hottest$mean_temp, 1), decimal.mark = ","), " °C"))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Yearly average"
+#| icon: thermometer-half
+#| color: secondary
+list(value = paste0(format(round(overall_avg, 1), decimal.mark = ","), " °C"))
+```
+
+## Row
+
+```{r}
+#| label: temp-timeline
+plot_ly(annual,
+        x = ~vuosi,
+        y = ~mean_temp,
+        type = "scatter",
+        mode = "lines",
+        name = "Yearly average",
+        line = list(color = "#4A4A4A", width = 1.5),
+        hovertext = ~paste0(vuosi, ": ",
+                             format(round(mean_temp, 1), decimal.mark = ","), " °C"),
+        hoverinfo = "text") |>
+  add_trace(x = ~vuosi,
+            y = ~trend_temp,
+            type = "scatter",
+            mode = "lines",
+            name = "Trend",
+            line = list(color = "rgba(74,74,74,0.45)", width = 1.5, dash = "dot"),
+            hoverinfo = "skip") |>
+  layout(
+    title = list(text = "<b>Average temperature by year - Helsinki Kaisaniemi (1900-)</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 range = list(min(annual$vuosi) - 3, max(annual$vuosi) + 2),
+                 tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
+    yaxis = list(title = "", ticksuffix = "°C", tickpad = 10, showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, rangemode = "tozero",
+                 range = list(0, max(annual$mean_temp, na.rm = TRUE) * 1.1),
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    margin = list(l = 60),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row {height="24px"}
+
+## Row {height="110px"}
+
+```{r}
+#| content: valuebox
+#| title: "Driest year (total rainfall)"
+#| icon: brightness-high
+#| color: "#8A5A22"
+#| classes: "kpi-extreme-box"
+list(value = paste0(driest$vuosi, " · ", format(round(driest$total_precip)), " mm"))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Wettest year (total rainfall)"
+#| icon: cloud-rain-heavy
+#| color: "#155E75"
+#| classes: "kpi-extreme-box"
+list(value = paste0(wettest$vuosi, " · ", format(round(wettest$total_precip)), " mm"))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Yearly average"
+#| icon: droplet-half
+#| color: secondary
+list(value = paste0(format(round(overall_avg_precip)), " mm"))
+```
+
+## Row
+
+```{r}
+#| label: precip-timeline
+plot_ly(annual,
+        x = ~vuosi,
+        y = ~total_precip,
+        type = "bar",
+        marker = list(color = "rgba(21, 94, 117, 0.85)"),
+        hovertext = ~paste0(vuosi, ": ",
+                             format(round(total_precip), big.mark = " ", trim = TRUE), " mm"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Annual rainfall - Helsinki Kaisaniemi (1900-)</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
+                 range = list(min(annual$vuosi) - 3, max(annual$vuosi) + 2),
+                 tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
+    yaxis = list(title = "", ticksuffix = " mm", tickpad = 10, showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    margin = list(l = 60),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
 ## Row
 
 ```{r}
 #| label: footer
 #| output: asis
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
-Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" style="color: #555555; text-decoration: underline;">Ilmatieteen laitos (FMI)</a>
+Data: <a href="https://en.ilmatieteenlaitos.fi/open-data" target="_blank" style="color: #555555; text-decoration: underline;">Ilmatieteen laitos</a>
 </p>')
 ```
