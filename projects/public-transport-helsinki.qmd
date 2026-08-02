@@ -19,9 +19,5 @@ format:
     include-after-body:
       text: |
         <footer class="page-footer">
-          <a href="mailto:teromeh@proton.me" aria-label="Email"><i class="bi bi-envelope"></i></a>
-          <a href="../" aria-label="Home"><i class="bi bi-house-door"></i></a>
         </footer>
 ---
-
-*Coming soon — data isn't ready yet.*
