@@ -1,0 +1,25 @@
+---
+title: "Public transport in Helsinki"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+    include-after-body:
+      text: |
+        <footer class="page-footer">
+          <a href="mailto:teromeh@proton.me" aria-label="Email"><i class="bi bi-envelope"></i></a>
+          <a href="../" aria-label="Home"><i class="bi bi-house-door"></i></a>
+        </footer>
+---
