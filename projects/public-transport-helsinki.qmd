@@ -1,5 +1,5 @@
 ---
-title: "Helsinki (HSL) area public transport"
+title: "Helsinki area (HSL) public transport"
 format: 
   dashboard:
     theme:
@@ -23,6 +23,7 @@ format:
 #| include: false
 library(plotly)
 library(dplyr)
+library(base64enc)
 
 data <- readRDS("hki-public-transport.rds")
 
@@ -31,6 +32,8 @@ title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
 bus_data <- data |>
   filter(Vechile == "Bus") |>
   arrange(Year)
+
+bus_icon <- base64enc::dataURI(file = "bus-icon.png", mime = "image/png")
 ```
 
 ## Row {height="550px"}
@@ -62,6 +65,7 @@ plot_ly(bus_data,
     xaxis = list(title = "",
                  tickvals = bus_data$Year,
                  tickformat = "d",
+                 range = c(min(bus_data$Year) - 0.4, max(bus_data$Year) + 0.6),
                  showgrid = FALSE,
                  zeroline = FALSE,
                  tickfont = list(family = "Inter, sans-serif", size = 13),
@@ -76,7 +80,21 @@ plot_ly(bus_data,
                  fixedrange = TRUE),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)",
-    margin = list(t = 40),
+    margin = list(t = 40, r = 30),
+    images = list(
+      list(
+        source = bus_icon,
+        xref = "x",
+        yref = "y",
+        x = max(bus_data$Year) + 0.1,
+        y = bus_data$Passengers_millions[which.max(bus_data$Year)],
+        sizex = 0.35,
+        sizey = 25,
+        xanchor = "left",
+        yanchor = "middle",
+        layer = "above"
+      )
+    ),
     annotations = lapply(1:nrow(bus_data), function(i) {
       list(
         x = bus_data$Year[i],
