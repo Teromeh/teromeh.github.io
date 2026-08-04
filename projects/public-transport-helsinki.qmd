@@ -28,12 +28,28 @@ library(base64enc)
 data <- readRDS("hki-public-transport.rds")
 
 title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+accent_color <- "#00BCD4"
 
 bus_data <- data |>
   filter(Vechile == "Bus") |>
   arrange(Year)
 
+metro_data <- data |>
+  filter(Vechile == "Metro") |>
+  arrange(Year)
+
+train_data <- data |>
+  filter(Vechile == "Commuter train") |>
+  arrange(Year)
+
+tram_data <- data |>
+  filter(Vechile == "Tram") |>
+  arrange(Year)
+
 bus_icon <- base64enc::dataURI(file = "bus-icon.png", mime = "image/png")
+metro_icon <- base64enc::dataURI(file = "Metro-icon.png", mime = "image/png")
+train_icon <- base64enc::dataURI(file = "Train-icon.png", mime = "image/png")
+tram_icon <- base64enc::dataURI(file = "Tram-icon.png", mime = "image/png")
 ```
 
 ## Row {height="550px"}
@@ -47,9 +63,9 @@ plot_ly(bus_data,
         y = ~Passengers_millions,
         type = "scatter",
         mode = "lines+markers",
-        line = list(color = "#00BCD4", width = 3, shape = "spline"),
+        line = list(color = accent_color, width = 3, shape = "spline"),
         marker = list(color = "#ffffff", size = 12,
-                      line = list(color = "#00BCD4", width = 3)),
+                      line = list(color = accent_color, width = 3)),
         hovertext = ~paste0(Year, ": ", format(round(Passengers_millions, 1), nsmall = 1),
                              "M bus journeys"),
         hoverinfo = "text") |>
@@ -72,7 +88,7 @@ plot_ly(bus_data,
                  fixedrange = TRUE),
     yaxis = list(title = "Journeys (millions)",
                  titlefont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
-                 rangemode = "tozero",
+                 range = c(0, 180),
                  showgrid = FALSE,
                  showline = FALSE,
                  zeroline = FALSE,
@@ -100,6 +116,224 @@ plot_ly(bus_data,
         x = bus_data$Year[i],
         y = bus_data$Passengers_millions[i],
         text = paste0("<b>", format(round(bus_data$Passengers_millions[i], 1), nsmall = 1), "</b>"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 14, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Column
+
+```{r}
+#| label: metro-journeys-by-year
+plot_ly(metro_data,
+        x = ~Year,
+        y = ~Passengers_millions,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = accent_color, width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 12,
+                      line = list(color = accent_color, width = 3)),
+        hovertext = ~paste0(Year, ": ", format(round(Passengers_millions, 1), nsmall = 1),
+                             "M metro journeys"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Metro journeys by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "",
+                 tickvals = metro_data$Year,
+                 tickformat = "d",
+                 range = c(min(metro_data$Year) - 0.4, max(metro_data$Year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Journeys (millions)",
+                 titlefont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+                 range = c(0, 180),
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    images = list(
+      list(
+        source = metro_icon,
+        xref = "x",
+        yref = "y",
+        x = max(metro_data$Year) + 0.1,
+        y = metro_data$Passengers_millions[which.max(metro_data$Year)],
+        sizex = 0.35,
+        sizey = 25,
+        xanchor = "left",
+        yanchor = "middle",
+        layer = "above"
+      )
+    ),
+    annotations = lapply(1:nrow(metro_data), function(i) {
+      list(
+        x = metro_data$Year[i],
+        y = metro_data$Passengers_millions[i],
+        text = paste0("<b>", format(round(metro_data$Passengers_millions[i], 1), nsmall = 1), "</b>"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 14, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row {height="550px"}
+
+### Column
+
+```{r}
+#| label: train-journeys-by-year
+plot_ly(train_data,
+        x = ~Year,
+        y = ~Passengers_millions,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = accent_color, width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 12,
+                      line = list(color = accent_color, width = 3)),
+        hovertext = ~paste0(Year, ": ", format(round(Passengers_millions, 1), nsmall = 1),
+                             "M train journeys"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Commuter train journeys by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "",
+                 tickvals = train_data$Year,
+                 tickformat = "d",
+                 range = c(min(train_data$Year) - 0.4, max(train_data$Year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Journeys (millions)",
+                 titlefont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+                 range = c(0, 180),
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    images = list(
+      list(
+        source = train_icon,
+        xref = "x",
+        yref = "y",
+        x = max(train_data$Year) + 0.1,
+        y = train_data$Passengers_millions[which.max(train_data$Year)],
+        sizex = 0.35,
+        sizey = 25,
+        xanchor = "left",
+        yanchor = "middle",
+        layer = "above"
+      )
+    ),
+    annotations = lapply(1:nrow(train_data), function(i) {
+      list(
+        x = train_data$Year[i],
+        y = train_data$Passengers_millions[i],
+        text = paste0("<b>", format(round(train_data$Passengers_millions[i], 1), nsmall = 1), "</b>"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 14, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Column
+
+```{r}
+#| label: tram-journeys-by-year
+plot_ly(tram_data,
+        x = ~Year,
+        y = ~Passengers_millions,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = accent_color, width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 12,
+                      line = list(color = accent_color, width = 3)),
+        hovertext = ~paste0(Year, ": ", format(round(Passengers_millions, 1), nsmall = 1),
+                             "M tram journeys"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Tram journeys by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "",
+                 tickvals = tram_data$Year,
+                 tickformat = "d",
+                 range = c(min(tram_data$Year) - 0.4, max(tram_data$Year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Journeys (millions)",
+                 titlefont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+                 range = c(0, 180),
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    images = list(
+      list(
+        source = tram_icon,
+        xref = "x",
+        yref = "y",
+        x = max(tram_data$Year) + 0.1,
+        y = tram_data$Passengers_millions[which.max(tram_data$Year)],
+        sizex = 0.35,
+        sizey = 25,
+        xanchor = "left",
+        yanchor = "middle",
+        layer = "above"
+      )
+    ),
+    annotations = lapply(1:nrow(tram_data), function(i) {
+      list(
+        x = tram_data$Year[i],
+        y = tram_data$Passengers_millions[i],
+        text = paste0("<b>", format(round(tram_data$Passengers_millions[i], 1), nsmall = 1), "</b>"),
         showarrow = FALSE,
         yanchor = "bottom",
         yshift = 10,
