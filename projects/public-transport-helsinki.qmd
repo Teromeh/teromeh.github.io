@@ -1,5 +1,5 @@
 ---
-title: "Public transport in Helsinki"
+title: "Helsinki area (HSL) public transport"
 format: 
   dashboard:
     theme:
@@ -16,8 +16,88 @@ format:
         href: mailto:teromeh@proton.me
       - icon: house-door
         href: ../
-    include-after-body:
-      text: |
-        <footer class="page-footer">
-        </footer>
 ---
+
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+
+data <- readRDS("hki-public-transport.rds")
+
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+bus_data <- data |>
+  filter(Vechile == "Bus") |>
+  arrange(Year)
+```
+
+## Row {height="550px"}
+
+### Column
+
+```{r}
+#| label: bus-journeys-by-year
+plot_ly(bus_data,
+        x = ~Year,
+        y = ~Passengers_millions,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = "#00BCD4", width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 12,
+                      line = list(color = "#00BCD4", width = 3)),
+        hovertext = ~paste0(Year, ": ", format(round(Passengers_millions, 1), nsmall = 1),
+                             "M bus journeys"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Bus journeys by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = "",
+                 tickvals = bus_data$Year,
+                 tickformat = "d",
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Journeys (millions)",
+                 titlefont = list(family = "Inter, sans-serif", size = 13, color = "#1a1a1a"),
+                 rangemode = "tozero",
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 13),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40),
+    annotations = lapply(1:nrow(bus_data), function(i) {
+      list(
+        x = bus_data$Year[i],
+        y = bus_data$Passengers_millions[i],
+        text = paste0("<b>", format(round(bus_data$Passengers_millions[i], 1), nsmall = 1), "</b>"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 14, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://www.hsl.fi/hsl/tutkimukset/matkustajamaarien-seuranta" target="_blank" style="color: #555555; text-decoration: underline;">HSL</a>
+</p>')
+```
