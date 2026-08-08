@@ -1,5 +1,5 @@
 ---
-title: "Helsinki area (HSL) public transport"
+title: "Helsinki (HSL) area public transport"
 format: 
   dashboard:
     theme:
