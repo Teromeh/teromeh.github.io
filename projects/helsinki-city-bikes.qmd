@@ -1,0 +1,295 @@
+---
+title: "Helsinki city bikes usage"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        <style>
+          .dataTables_wrapper,
+          table.dataTable {
+            font-size: 12px;
+            font-family: Inter, sans-serif;
+          }
+
+          table.dataTable td,
+          table.dataTable th {
+            padding: 4px 8px;
+          }
+
+          .dataTables_info,
+          .dataTables_paginate {
+            font-size: 11px;
+          }
+        </style>
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+library(DT)
+
+data <- readRDS("hki-city-bike-usage-yearly.rds") |>
+  mutate(year = as.numeric(year)) |>
+  arrange(year)
+
+stations <- readRDS("hki-city-bike-stations.rds") |>
+  filter(station != "") |>
+  mutate(year = as.numeric(year))
+
+departures_data <- stations |>
+  group_by(station) |>
+  summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(departures))
+
+arrivals_data <- stations |>
+  group_by(station) |>
+  summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(arrivals))
+
+title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
+accent_color <- "#FCBC19"
+```
+
+## Row {height="550px"}
+
+### Column
+
+```{r}
+#| label: bike-journeys-by-year
+plot_ly(data,
+        x = ~year,
+        y = ~count,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = accent_color, width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 10,
+                      line = list(color = accent_color, width = 3)),
+        hovertext = ~paste0(year, ": ", format(round(count, 1), nsmall = 1),
+                             "M bike journeys"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>City bike journeys by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 12)
+    ),
+    xaxis = list(title = "",
+                 tickvals = data$year,
+                 tickformat = "d",
+                 range = c(min(data$year) - 0.4, max(data$year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Journeys (millions)",
+                 titlefont = list(family = "Inter, sans-serif", size = 12, color = "#1a1a1a"),
+                 range = c(0, max(data$count) * 1.3),
+                 dtick = 1,
+                 tickformat = "d",
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    annotations = lapply(1:nrow(data), function(i) {
+      list(
+        x = data$year[i],
+        y = data$count[i],
+        text = paste0("<b>", format(round(data$count[i], 1), nsmall = 1), "</b>M"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 12, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row {height="450px"}
+
+### Column
+
+```{r}
+#| label: avg-distance-by-year
+plot_ly(data,
+        x = ~year,
+        y = ~avg_distance_km,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = "#FCBC19", width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 10,
+                      line = list(color = "#FCBC19", width = 3)),
+        hovertext = ~paste0(year, ": ", format(round(avg_distance_km, 1), nsmall = 1), " km"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Average journey distance by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 12)
+    ),
+    xaxis = list(title = "",
+                 tickvals = data$year,
+                 tickformat = "d",
+                 range = c(min(data$year) - 0.4, max(data$year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Distance (km)",
+                 titlefont = list(family = "Inter, sans-serif", size = 12, color = "#1a1a1a"),
+                 range = c(0, max(data$avg_distance_km) * 1.3),
+                 dtick = 1,
+                 tickformat = "d",
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    annotations = lapply(1:nrow(data), function(i) {
+      list(
+        x = data$year[i],
+        y = data$avg_distance_km[i],
+        text = paste0("<b>", format(round(data$avg_distance_km[i], 1), nsmall = 1), "</b> km"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 12, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Column
+
+```{r}
+#| label: avg-duration-by-year
+plot_ly(data,
+        x = ~year,
+        y = ~avg_duration_min,
+        type = "scatter",
+        mode = "lines+markers",
+        line = list(color = "#FCBC19", width = 3, shape = "spline"),
+        marker = list(color = "#ffffff", size = 10,
+                      line = list(color = "#FCBC19", width = 3)),
+        hovertext = ~paste0(year, ": ", format(round(avg_duration_min, 1), nsmall = 1), " min"),
+        hoverinfo = "text") |>
+  layout(
+    title = list(text = "<b>Average journey time by year</b>", font = title_font, x = 0),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hoverlabel = list(
+      bgcolor = "#333333",
+      bordercolor = "#333333",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 12)
+    ),
+    xaxis = list(title = "",
+                 tickvals = data$year,
+                 tickformat = "d",
+                 range = c(min(data$year) - 0.4, max(data$year) + 0.6),
+                 showgrid = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    yaxis = list(title = "Duration (min)",
+                 titlefont = list(family = "Inter, sans-serif", size = 12, color = "#1a1a1a"),
+                 range = c(0, max(data$avg_duration_min) * 1.3),
+                 dtick = 5,
+                 tickformat = "d",
+                 showgrid = FALSE,
+                 showline = FALSE,
+                 zeroline = FALSE,
+                 tickfont = list(family = "Inter, sans-serif", size = 11),
+                 fixedrange = TRUE),
+    paper_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "rgba(0,0,0,0)",
+    margin = list(t = 40, r = 30),
+    annotations = lapply(1:nrow(data), function(i) {
+      list(
+        x = data$year[i],
+        y = data$avg_duration_min[i],
+        text = paste0("<b>", format(round(data$avg_duration_min[i], 1), nsmall = 1), "</b> min"),
+        showarrow = FALSE,
+        yanchor = "bottom",
+        yshift = 10,
+        font = list(color = "#1a1a1a", size = 12, family = "Inter, sans-serif")
+      )
+    })
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+## Row {height="500px"}
+
+### Column
+
+```{r}
+#| label: top-departure-stations
+#| title: "Most popular departure stations"
+datatable(departures_data,
+          colnames = c("Station" = "station", "Departures" = "departures"),
+          rownames = FALSE,
+          options = list(
+            pageLength = 10,
+            lengthChange = FALSE,
+            dom = "tip",
+            scrollY = "300px",
+            scrollCollapse = TRUE
+          )) |>
+  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0)
+```
+
+### Column
+
+```{r}
+#| label: top-arrival-stations
+#| title: "Most popular arrival stations"
+datatable(arrivals_data,
+          colnames = c("Station" = "station", "Arrivals" = "arrivals"),
+          rownames = FALSE,
+          options = list(
+            pageLength = 10,
+            lengthChange = FALSE,
+            dom = "tip",
+            scrollY = "300px",
+            scrollCollapse = TRUE
+          )) |>
+  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0)
+```
+
+## Row
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://www.hsl.fi/avoindata" target="_blank" style="color: #555555; text-decoration: underline;">HSL</a>
+</p>')
+```

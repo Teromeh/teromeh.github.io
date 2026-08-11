@@ -42,6 +42,17 @@ $card-border-radius: 8px;
   margin-top: 1rem;
 }
 
+/* Match dashboard table titles to Plotly chart titles */
+.quarto-dashboard .card:has(.dataTables_wrapper) > .card-header {
+  background: transparent;
+  border-bottom: 0;
+  color: #1a1a1a;
+  font-family: "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 1rem 0.25rem;
+}
+
 .quarto-dashboard .navbar .bi {
   font-size: 1.2rem;
 }

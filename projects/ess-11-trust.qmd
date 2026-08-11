@@ -76,6 +76,8 @@ ppltrst_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(ppltrst)) |>
     count(ppltrst) |>
+    complete(ppltrst = 0:10, fill = list(n = 0)) |>
+    arrange(ppltrst) |>
     mutate(percentage = n / sum(n) * 100,
            percentage_precise = sprintf("%.1f", percentage))
 })
@@ -95,6 +97,8 @@ pplfair_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(pplfair)) |>
     count(pplfair) |>
+    complete(pplfair = 0:10, fill = list(n = 0)) |>
+    arrange(pplfair) |>
     mutate(percentage = n / sum(n) * 100,
            percentage_precise = sprintf("%.1f", percentage))
 })
@@ -114,6 +118,8 @@ pplhlp_by_country <- lapply(groups, function(g) {
   d |>
     filter(!is.na(pplhlp)) |>
     count(pplhlp) |>
+    complete(pplhlp = 0:10, fill = list(n = 0)) |>
+    arrange(pplhlp) |>
     mutate(percentage = n / sum(n) * 100,
            percentage_precise = sprintf("%.1f", percentage))
 })
@@ -183,7 +189,7 @@ build_group_data <- function(by_country, avg_scores, total_n, bar_colors, avg_an
     list(
       x = I(as.character(d[[1]])),
       y = I(d$percentage),
-      text = I(paste0("<b>", d$percentage_precise, "%</b>")),
+      text = I(ifelse(d$n == 0, "", paste0("<b>", d$percentage_precise, "%</b>"))),
       hovertext = I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents")),
       marker_color = I(bar_colors[[i]]),
       annotations = list(avg_annotation_fn(avg_scores[i]), n_annotation(total_n[i]))
@@ -224,6 +230,23 @@ essSetNavbarHeightVar();
 window.addEventListener('resize', essSetNavbarHeightVar);
 window.addEventListener('load', essSetNavbarHeightVar);
 
+var ESS_ANIM_OPTS = {
+  transition: { duration: 500, easing: 'cubic-in-out' },
+  frame: { duration: 500, redraw: false }
+};
+
+function essAnimateBars(el, g) {
+  if (!g || !el) return;
+  Plotly.relayout(el, { annotations: g.annotations });
+  Plotly.animate(el, {
+    data: [{
+      x: g.x, y: g.y, text: g.text, hovertext: g.hovertext,
+      marker: { color: g.marker_color }
+    }],
+    traces: [0]
+  }, ESS_ANIM_OPTS);
+}
+
 window.essUpdateCountry = function (idx) {
   try {
     var t = window.essTrustData[idx];
@@ -234,27 +257,9 @@ window.essUpdateCountry = function (idx) {
     var helpEl = essFindGraphDiv('pplhlp-bar', 2);
     console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null);
 
-    if (t && trustEl) {
-      Plotly.restyle(trustEl, {
-        x: [t.x], y: [t.y], text: [t.text],
-        hovertext: [t.hovertext], 'marker.color': [t.marker_color]
-      }, [0]);
-      Plotly.relayout(trustEl, { annotations: t.annotations });
-    }
-    if (f && fairEl) {
-      Plotly.restyle(fairEl, {
-        x: [f.x], y: [f.y], text: [f.text],
-        hovertext: [f.hovertext], 'marker.color': [f.marker_color]
-      }, [0]);
-      Plotly.relayout(fairEl, { annotations: f.annotations });
-    }
-    if (h && helpEl) {
-      Plotly.restyle(helpEl, {
-        x: [h.x], y: [h.y], text: [h.text],
-        hovertext: [h.hovertext], 'marker.color': [h.marker_color]
-      }, [0]);
-      Plotly.relayout(helpEl, { annotations: h.annotations });
-    }
+    essAnimateBars(trustEl, t);
+    essAnimateBars(fairEl, f);
+    essAnimateBars(helpEl, h);
   } catch (err) {
     console.error('ESS country filter update failed:', err);
   }
@@ -310,7 +315,7 @@ plot_ly(elementId = "ppltrst-bar") |>
     y = ~percentage,
     type = "bar",
     marker = list(color = bar_colors_by_country[[1]]),
-    text = ~paste0("<b>", percentage_precise, "%</b>"),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
     textposition = "outside",
     textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
     hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
@@ -370,7 +375,7 @@ plot_ly(elementId = "pplfair-bar") |>
     y = ~percentage,
     type = "bar",
     marker = list(color = bar_colors_by_country_fair[[1]]),
-    text = ~paste0("<b>", percentage_precise, "%</b>"),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
     textposition = "outside",
     textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
     hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
@@ -430,7 +435,7 @@ plot_ly(elementId = "pplhlp-bar") |>
     y = ~percentage,
     type = "bar",
     marker = list(color = bar_colors_by_country_help[[1]]),
-    text = ~paste0("<b>", percentage_precise, "%</b>"),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
     textposition = "outside",
     textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
     hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
