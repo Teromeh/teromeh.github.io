@@ -53,6 +53,11 @@ $card-border-radius: 8px;
   padding: 0 1rem 0.25rem;
 }
 
+.quarto-dashboard .card:has(.dataTables_wrapper) .dataTables_scrollHead th:last-child,
+.quarto-dashboard .card:has(.dataTables_wrapper) .dataTables_scrollBody td:last-child {
+  padding-right: 24px !important;
+}
+
 .quarto-dashboard .navbar .bi {
   font-size: 1.2rem;
 }
