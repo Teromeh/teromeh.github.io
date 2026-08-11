@@ -60,6 +60,31 @@ format:
             box-shadow: none;
             outline: none;
           }
+
+          @supports (appearance: base-select) {
+            .year-filter.form-select,
+            .year-filter.form-select::picker(select) {
+              appearance: base-select;
+            }
+
+            .year-filter.form-select option {
+              font-family: Inter, sans-serif;
+              font-size: 11px;
+              padding: 0.25rem 0.5rem;
+            }
+
+            .year-filter.form-select option:hover,
+            .year-filter.form-select option:focus {
+              background-color: #f2f2f2;
+              color: #1a1a1a;
+            }
+
+            .year-filter.form-select option:checked {
+              background-color: #f2f2f2;
+              color: #1a1a1a;
+              font-weight: 500;
+            }
+          }
         </style>
     nav-buttons:
       - icon: envelope
