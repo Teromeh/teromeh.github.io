@@ -27,42 +27,6 @@ format:
           .dataTables_paginate {
             font-size: 11px;
           }
-
-          .year-filter {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 6px;
-          }
-
-          .quarto-dashboard .card:has(.dataTables_wrapper) > .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-          }
-
-          .year-filter-select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            width: auto;
-            font-family: Inter, sans-serif;
-            font-size: 12px;
-            color: #1a1a1a;
-            background-color: #ffffff;
-            padding: 3px 22px 3px 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23555555' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 6px center;
-            background-size: 10px 10px;
-          }
-
-          .year-filter-select:focus {
-            outline: none;
-            box-shadow: none;
-          }
         </style>
     nav-buttons:
       - icon: envelope
@@ -77,7 +41,6 @@ format:
 library(plotly)
 library(dplyr)
 library(DT)
-library(htmlwidgets)
 
 data <- readRDS("hki-city-bike-usage-yearly.rds") |>
   mutate(year = as.numeric(year)) |>
@@ -87,23 +50,15 @@ stations <- readRDS("hki-city-bike-stations.rds") |>
   filter(station != "") |>
   mutate(year = as.numeric(year))
 
-years <- c("All", sort(unique(stations$year), decreasing = TRUE))
+departures_data <- stations |>
+  group_by(station) |>
+  summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(departures))
 
-departures_by_year <- lapply(years, function(yr) {
-  d <- if (yr == "All") stations else stations |> filter(year == yr)
-  d |>
-    group_by(station) |>
-    summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
-    arrange(desc(departures))
-})
-
-arrivals_by_year <- lapply(years, function(yr) {
-  d <- if (yr == "All") stations else stations |> filter(year == yr)
-  d |>
-    group_by(station) |>
-    summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
-    arrange(desc(arrivals))
-})
+arrivals_data <- stations |>
+  group_by(station) |>
+  summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
+  arrange(desc(arrivals))
 
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
 accent_color <- "#FCBC19"
@@ -298,15 +253,9 @@ plot_ly(data,
 ```{r}
 #| label: top-departure-stations
 #| title: "Most popular departure stations"
-departures_json <- lapply(departures_by_year, function(d) {
-  unname(lapply(seq_len(nrow(d)), function(i) list(d$station[i], d$departures[i])))
-})
-names(departures_json) <- years
-
-datatable(departures_by_year[[1]],
+datatable(departures_data,
           colnames = c("Station" = "station", "Departures" = "departures"),
           rownames = FALSE,
-          elementId = "departures-table",
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -314,43 +263,7 @@ datatable(departures_by_year[[1]],
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0) |>
-  onRender(
-    "
-    function(el, x, data) {
-      var yearData = data.years;
-      var yearNames = data.yearNames;
-
-      var select = document.createElement('select');
-      select.className = 'year-filter-select';
-      yearNames.forEach(function(yr) {
-        var opt = document.createElement('option');
-        opt.value = yr;
-        opt.text = yr;
-        select.appendChild(opt);
-      });
-
-      var card = el.closest('.card');
-      var header = card ? card.querySelector('.card-header') : null;
-      if (header) {
-        header.appendChild(select);
-      } else {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'year-filter';
-        wrapper.appendChild(select);
-        el.insertBefore(wrapper, el.firstChild);
-      }
-
-      select.addEventListener('change', function() {
-        var table = $(el).find('table').DataTable();
-        table.clear();
-        table.rows.add(yearData[this.value]);
-        table.draw();
-      });
-    }
-    ",
-    data = list(years = departures_json, yearNames = years)
-  )
+  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0)
 ```
 
 ### Column
@@ -358,15 +271,9 @@ datatable(departures_by_year[[1]],
 ```{r}
 #| label: top-arrival-stations
 #| title: "Most popular arrival stations"
-arrivals_json <- lapply(arrivals_by_year, function(d) {
-  unname(lapply(seq_len(nrow(d)), function(i) list(d$station[i], d$arrivals[i])))
-})
-names(arrivals_json) <- years
-
-datatable(arrivals_by_year[[1]],
+datatable(arrivals_data,
           colnames = c("Station" = "station", "Arrivals" = "arrivals"),
           rownames = FALSE,
-          elementId = "arrivals-table",
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -374,43 +281,7 @@ datatable(arrivals_by_year[[1]],
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0) |>
-  onRender(
-    "
-    function(el, x, data) {
-      var yearData = data.years;
-      var yearNames = data.yearNames;
-
-      var select = document.createElement('select');
-      select.className = 'year-filter-select';
-      yearNames.forEach(function(yr) {
-        var opt = document.createElement('option');
-        opt.value = yr;
-        opt.text = yr;
-        select.appendChild(opt);
-      });
-
-      var card = el.closest('.card');
-      var header = card ? card.querySelector('.card-header') : null;
-      if (header) {
-        header.appendChild(select);
-      } else {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'year-filter';
-        wrapper.appendChild(select);
-        el.insertBefore(wrapper, el.firstChild);
-      }
-
-      select.addEventListener('change', function() {
-        var table = $(el).find('table').DataTable();
-        table.clear();
-        table.rows.add(yearData[this.value]);
-        table.draw();
-      });
-    }
-    ",
-    data = list(years = arrivals_json, yearNames = years)
-  )
+  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0)
 ```
 
 ## Row
