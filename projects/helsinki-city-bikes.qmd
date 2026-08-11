@@ -27,6 +27,33 @@ format:
           .dataTables_paginate {
             font-size: 11px;
           }
+
+          .year-filter {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 6px;
+          }
+
+          .quarto-dashboard .card:has(.dataTables_wrapper) > .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+          }
+
+          .year-filter-select {
+            width: auto;
+            font-family: Inter, sans-serif;
+            font-size: 12px;
+            padding: 3px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+          }
+
+          .year-filter-select:focus {
+            outline: none;
+            box-shadow: none;
+          }
         </style>
     nav-buttons:
       - icon: envelope
@@ -41,6 +68,7 @@ format:
 library(plotly)
 library(dplyr)
 library(DT)
+library(htmlwidgets)
 
 data <- readRDS("hki-city-bike-usage-yearly.rds") |>
   mutate(year = as.numeric(year)) |>
@@ -50,15 +78,23 @@ stations <- readRDS("hki-city-bike-stations.rds") |>
   filter(station != "") |>
   mutate(year = as.numeric(year))
 
-departures_data <- stations |>
-  group_by(station) |>
-  summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
-  arrange(desc(departures))
+years <- c("All", sort(unique(stations$year), decreasing = TRUE))
 
-arrivals_data <- stations |>
-  group_by(station) |>
-  summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
-  arrange(desc(arrivals))
+departures_by_year <- lapply(years, function(yr) {
+  d <- if (yr == "All") stations else stations |> filter(year == yr)
+  d |>
+    group_by(station) |>
+    summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
+    arrange(desc(departures))
+})
+
+arrivals_by_year <- lapply(years, function(yr) {
+  d <- if (yr == "All") stations else stations |> filter(year == yr)
+  d |>
+    group_by(station) |>
+    summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
+    arrange(desc(arrivals))
+})
 
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
 accent_color <- "#FCBC19"
@@ -253,9 +289,15 @@ plot_ly(data,
 ```{r}
 #| label: top-departure-stations
 #| title: "Most popular departure stations"
-datatable(departures_data,
+departures_json <- lapply(departures_by_year, function(d) {
+  unname(lapply(seq_len(nrow(d)), function(i) list(d$station[i], d$departures[i])))
+})
+names(departures_json) <- years
+
+datatable(departures_by_year[[1]],
           colnames = c("Station" = "station", "Departures" = "departures"),
           rownames = FALSE,
+          elementId = "departures-table",
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -263,7 +305,43 @@ datatable(departures_data,
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0)
+  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0) |>
+  onRender(
+    "
+    function(el, x, data) {
+      var yearData = data.years;
+      var yearNames = data.yearNames;
+
+      var select = document.createElement('select');
+      select.className = 'year-filter-select';
+      yearNames.forEach(function(yr) {
+        var opt = document.createElement('option');
+        opt.value = yr;
+        opt.text = yr;
+        select.appendChild(opt);
+      });
+
+      var card = el.closest('.card');
+      var header = card ? card.querySelector('.card-header') : null;
+      if (header) {
+        header.appendChild(select);
+      } else {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'year-filter';
+        wrapper.appendChild(select);
+        el.insertBefore(wrapper, el.firstChild);
+      }
+
+      select.addEventListener('change', function() {
+        var table = $(el).find('table').DataTable();
+        table.clear();
+        table.rows.add(yearData[this.value]);
+        table.draw();
+      });
+    }
+    ",
+    data = list(years = departures_json, yearNames = years)
+  )
 ```
 
 ### Column
@@ -271,9 +349,15 @@ datatable(departures_data,
 ```{r}
 #| label: top-arrival-stations
 #| title: "Most popular arrival stations"
-datatable(arrivals_data,
+arrivals_json <- lapply(arrivals_by_year, function(d) {
+  unname(lapply(seq_len(nrow(d)), function(i) list(d$station[i], d$arrivals[i])))
+})
+names(arrivals_json) <- years
+
+datatable(arrivals_by_year[[1]],
           colnames = c("Station" = "station", "Arrivals" = "arrivals"),
           rownames = FALSE,
+          elementId = "arrivals-table",
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -281,7 +365,43 @@ datatable(arrivals_data,
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0)
+  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0) |>
+  onRender(
+    "
+    function(el, x, data) {
+      var yearData = data.years;
+      var yearNames = data.yearNames;
+
+      var select = document.createElement('select');
+      select.className = 'year-filter-select';
+      yearNames.forEach(function(yr) {
+        var opt = document.createElement('option');
+        opt.value = yr;
+        opt.text = yr;
+        select.appendChild(opt);
+      });
+
+      var card = el.closest('.card');
+      var header = card ? card.querySelector('.card-header') : null;
+      if (header) {
+        header.appendChild(select);
+      } else {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'year-filter';
+        wrapper.appendChild(select);
+        el.insertBefore(wrapper, el.firstChild);
+      }
+
+      select.addEventListener('change', function() {
+        var table = $(el).find('table').DataTable();
+        table.clear();
+        table.rows.add(yearData[this.value]);
+        table.draw();
+      });
+    }
+    ",
+    data = list(years = arrivals_json, yearNames = years)
+  )
 ```
 
 ## Row
