@@ -27,6 +27,39 @@ format:
           .dataTables_paginate {
             font-size: 11px;
           }
+
+          .quarto-dashboard .card:has(.dataTables_wrapper) > .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+          }
+
+          .year-filter-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+          }
+
+          .year-filter-label {
+            font-family: Inter, sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin: 0;
+          }
+
+          .year-filter.form-select {
+            font-family: Inter, sans-serif;
+            font-size: 11px;
+            width: auto;
+          }
+
+          .year-filter.form-select:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+            outline: none;
+          }
         </style>
     nav-buttons:
       - icon: envelope
@@ -50,15 +83,43 @@ stations <- readRDS("hki-city-bike-stations.rds") |>
   filter(station != "") |>
   mutate(year = as.numeric(year))
 
-departures_data <- stations |>
-  group_by(station) |>
-  summarise(departures = sum(departures, na.rm = TRUE), .groups = "drop") |>
-  arrange(desc(departures))
+year_choices <- c("All", as.character(sort(unique(stations$year), decreasing = TRUE)))
 
-arrivals_data <- stations |>
-  group_by(station) |>
-  summarise(arrivals = sum(arrivals, na.rm = TRUE), .groups = "drop") |>
-  arrange(desc(arrivals))
+# Build one aggregated station table per year (plus "All") for a given metric
+aggregate_stations <- function(metric) {
+  setNames(
+    lapply(year_choices, function(yr) {
+      d <- if (yr == "All") stations else stations |> filter(year == as.numeric(yr))
+      d |>
+        group_by(station) |>
+        summarise(value = sum(.data[[metric]], na.rm = TRUE), .groups = "drop") |>
+        arrange(desc(value))
+    }),
+    year_choices
+  )
+}
+
+# Turn a named list of per-year data frames into a JSON object of row-arrays,
+# ready to be dropped straight into DT via table.rows.add()
+rows_json <- function(named_list_of_dfs) {
+  rows <- lapply(named_list_of_dfs, function(df) {
+    lapply(seq_len(nrow(df)), function(i) unname(as.list(df[i, , drop = FALSE])))
+  })
+  jsonlite::toJSON(rows, auto_unbox = TRUE)
+}
+
+departures_by_year <- aggregate_stations("departures")
+arrivals_by_year   <- aggregate_stations("arrivals")
+
+departures_data <- departures_by_year[["All"]] |> rename(departures = value)
+arrivals_data   <- arrivals_by_year[["All"]] |> rename(arrivals = value)
+
+departures_json <- rows_json(departures_by_year)
+arrivals_json   <- rows_json(arrivals_by_year)
+
+# JS objects reorder integer-like keys (e.g. "2020") ahead of "All", so the
+# dropdown order is built from this explicit array rather than Object.keys()
+year_choices_json <- jsonlite::toJSON(year_choices)
 
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
 accent_color <- "#FCBC19"
@@ -263,7 +324,45 @@ datatable(departures_data,
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0)
+  formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0) |>
+  htmlwidgets::onRender(paste0("
+    function(el) {
+      var yearData = ", departures_json, ";
+      var years = ", year_choices_json, ";
+      var table = $(el).find('table').DataTable();
+      var card = el.closest('.card');
+      var header = card ? card.querySelector('.card-header') : null;
+      if (!header || header.querySelector('.year-filter')) return;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'year-filter-wrap';
+
+      var label = document.createElement('label');
+      label.className = 'year-filter-label';
+      label.textContent = 'Year';
+      label.setAttribute('for', el.id + '-year');
+
+      var select = document.createElement('select');
+      select.className = 'year-filter form-select form-select-sm';
+      select.id = el.id + '-year';
+      years.forEach(function(yr) {
+        var opt = document.createElement('option');
+        opt.value = yr;
+        opt.textContent = yr;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', function() {
+        table.clear();
+        table.rows.add(yearData[this.value]);
+        table.draw();
+      });
+
+      wrap.appendChild(label);
+      wrap.appendChild(select);
+      header.appendChild(wrap);
+    }
+  "))
 ```
 
 ### Column
@@ -281,7 +380,45 @@ datatable(arrivals_data,
             scrollY = "300px",
             scrollCollapse = TRUE
           )) |>
-  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0)
+  formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0) |>
+  htmlwidgets::onRender(paste0("
+    function(el) {
+      var yearData = ", arrivals_json, ";
+      var years = ", year_choices_json, ";
+      var table = $(el).find('table').DataTable();
+      var card = el.closest('.card');
+      var header = card ? card.querySelector('.card-header') : null;
+      if (!header || header.querySelector('.year-filter')) return;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'year-filter-wrap';
+
+      var label = document.createElement('label');
+      label.className = 'year-filter-label';
+      label.textContent = 'Year';
+      label.setAttribute('for', el.id + '-year');
+
+      var select = document.createElement('select');
+      select.className = 'year-filter form-select form-select-sm';
+      select.id = el.id + '-year';
+      years.forEach(function(yr) {
+        var opt = document.createElement('option');
+        opt.value = yr;
+        opt.textContent = yr;
+        select.appendChild(opt);
+      });
+
+      select.addEventListener('change', function() {
+        table.clear();
+        table.rows.add(yearData[this.value]);
+        table.draw();
+      });
+
+      wrap.appendChild(label);
+      wrap.appendChild(select);
+      header.appendChild(wrap);
+    }
+  "))
 ```
 
 ## Row
