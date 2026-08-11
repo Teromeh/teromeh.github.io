@@ -42,12 +42,21 @@ format:
           }
 
           .year-filter-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
             width: auto;
             font-family: Inter, sans-serif;
             font-size: 12px;
-            padding: 3px 8px;
+            color: #1a1a1a;
+            background-color: #ffffff;
+            padding: 3px 22px 3px 8px;
             border: 1px solid #ced4da;
             border-radius: 4px;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23555555' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            background-size: 10px 10px;
           }
 
           .year-filter-select:focus {
