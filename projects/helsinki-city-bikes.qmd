@@ -67,6 +67,16 @@ format:
               appearance: base-select;
             }
 
+            .year-filter.form-select {
+              background-image: none;
+            }
+
+            .year-filter.form-select::picker-icon {
+              width: 10px;
+              height: 10px;
+              color: #1a1a1a;
+            }
+
             .year-filter.form-select option {
               font-family: Inter, sans-serif;
               font-size: 11px;
