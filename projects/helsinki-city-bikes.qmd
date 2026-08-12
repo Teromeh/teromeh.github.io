@@ -59,6 +59,7 @@ format:
             min-width: 4.5rem;
             font-family: Inter, sans-serif;
             font-size: 11px;
+            font-weight: 400;
             color: #1a1a1a;
             background: #ffffff;
             border: 1px solid #ced4da;
@@ -111,6 +112,7 @@ format:
             padding: 0.3rem 0.6rem;
             font-family: Inter, sans-serif;
             font-size: 11px;
+            font-weight: 400;
             color: #1a1a1a;
             cursor: pointer;
             white-space: nowrap;
@@ -382,7 +384,8 @@ datatable(departures_data,
             lengthChange = FALSE,
             dom = "tip",
             scrollY = "300px",
-            scrollCollapse = TRUE
+            scrollCollapse = TRUE,
+            language = list(info = "_TOTAL_ entries")
           )) |>
   formatCurrency("Departures", currency = "", interval = 3, mark = " ", digits = 0) |>
   htmlwidgets::onRender(paste0("
@@ -498,7 +501,8 @@ datatable(arrivals_data,
             lengthChange = FALSE,
             dom = "tip",
             scrollY = "300px",
-            scrollCollapse = TRUE
+            scrollCollapse = TRUE,
+            language = list(info = "_TOTAL_ entries")
           )) |>
   formatCurrency("Arrivals", currency = "", interval = 3, mark = " ", digits = 0) |>
   htmlwidgets::onRender(paste0("
