@@ -39,6 +39,7 @@ format:
             display: flex;
             align-items: center;
             gap: 0.4rem;
+            position: relative;
           }
 
           .year-filter-label {
@@ -49,51 +50,75 @@ format:
             margin: 0;
           }
 
-          .year-filter.form-select {
+          .year-filter {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            min-width: 4.5rem;
             font-family: Inter, sans-serif;
             font-size: 11px;
-            width: auto;
+            color: #1a1a1a;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            cursor: pointer;
+            user-select: none;
           }
 
-          .year-filter.form-select:focus {
-            border-color: #ced4da;
-            box-shadow: none;
+          .year-filter:focus {
             outline: none;
+            border-color: #ced4da;
           }
 
-          @supports (appearance: base-select) {
-            .year-filter.form-select,
-            .year-filter.form-select::picker(select) {
-              appearance: base-select;
-            }
+          .year-filter-caret {
+            width: 9px;
+            height: 9px;
+            flex: none;
+            color: #555555;
+            transition: transform 0.15s ease;
+          }
 
-            .year-filter.form-select {
-              background-image: none;
-            }
+          .year-filter.open .year-filter-caret {
+            transform: rotate(180deg);
+          }
 
-            .year-filter.form-select::picker-icon {
-              width: 10px;
-              height: 10px;
-              color: #1a1a1a;
-            }
+          .year-filter-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            min-width: 100%;
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            list-style: none;
+            margin: 0;
+            padding: 4px 0;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 20;
+            display: none;
+          }
 
-            .year-filter.form-select option {
-              font-family: Inter, sans-serif;
-              font-size: 11px;
-              padding: 0.25rem 0.5rem;
-            }
+          .year-filter.open .year-filter-menu {
+            display: block;
+          }
 
-            .year-filter.form-select option:hover,
-            .year-filter.form-select option:focus {
-              background-color: #f2f2f2;
-              color: #1a1a1a;
-            }
+          .year-filter-menu li {
+            padding: 0.3rem 0.6rem;
+            font-family: Inter, sans-serif;
+            font-size: 11px;
+            color: #1a1a1a;
+            cursor: pointer;
+            white-space: nowrap;
+          }
 
-            .year-filter.form-select option:checked {
-              background-color: #f2f2f2;
-              color: #1a1a1a;
-              font-weight: 500;
-            }
+          .year-filter-menu li:hover,
+          .year-filter-menu li.active {
+            background: #f2f2f2;
           }
         </style>
     nav-buttons:
@@ -367,7 +392,7 @@ datatable(departures_data,
       var table = $(el).find('table').DataTable();
       var card = el.closest('.card');
       var header = card ? card.querySelector('.card-header') : null;
-      if (!header || header.querySelector('.year-filter')) return;
+      if (!header || header.querySelector('.year-filter-wrap')) return;
 
       var wrap = document.createElement('div');
       wrap.className = 'year-filter-wrap';
@@ -375,26 +400,86 @@ datatable(departures_data,
       var label = document.createElement('label');
       label.className = 'year-filter-label';
       label.textContent = 'Year';
-      label.setAttribute('for', el.id + '-year');
 
-      var select = document.createElement('select');
-      select.className = 'year-filter form-select form-select-sm';
-      select.id = el.id + '-year';
-      years.forEach(function(yr) {
-        var opt = document.createElement('option');
-        opt.value = yr;
-        opt.textContent = yr;
-        select.appendChild(opt);
+      var control = document.createElement('div');
+      control.className = 'year-filter';
+      control.tabIndex = 0;
+      control.setAttribute('role', 'button');
+      control.setAttribute('aria-haspopup', 'listbox');
+      control.setAttribute('aria-expanded', 'false');
+
+      var valueSpan = document.createElement('span');
+      valueSpan.className = 'year-filter-value';
+      valueSpan.textContent = years[0];
+
+      var caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      caret.setAttribute('viewBox', '0 0 10 6');
+      caret.setAttribute('class', 'year-filter-caret');
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M1 1l4 4 4-4');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      caret.appendChild(path);
+
+      var menu = document.createElement('ul');
+      menu.className = 'year-filter-menu';
+      menu.setAttribute('role', 'listbox');
+
+      function closeMenu() {
+        control.classList.remove('open');
+        control.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', onDocClick);
+      }
+      function openMenu() {
+        control.classList.add('open');
+        control.setAttribute('aria-expanded', 'true');
+        document.addEventListener('click', onDocClick);
+      }
+      function onDocClick(e) {
+        if (!control.contains(e.target)) closeMenu();
+      }
+
+      years.forEach(function(yr, i) {
+        var li = document.createElement('li');
+        li.textContent = yr;
+        li.setAttribute('role', 'option');
+        if (i === 0) li.classList.add('active');
+        li.addEventListener('click', function(e) {
+          e.stopPropagation();
+          valueSpan.textContent = yr;
+          var items = menu.querySelectorAll('li');
+          for (var j = 0; j < items.length; j++) items[j].classList.remove('active');
+          li.classList.add('active');
+          table.clear();
+          table.rows.add(yearData[yr]);
+          table.draw();
+          closeMenu();
+        });
+        menu.appendChild(li);
       });
 
-      select.addEventListener('change', function() {
-        table.clear();
-        table.rows.add(yearData[this.value]);
-        table.draw();
+      control.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (control.classList.contains('open')) closeMenu(); else openMenu();
       });
+      control.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (control.classList.contains('open')) closeMenu(); else openMenu();
+        } else if (e.key === 'Escape') {
+          closeMenu();
+        }
+      });
+
+      control.appendChild(valueSpan);
+      control.appendChild(caret);
+      control.appendChild(menu);
 
       wrap.appendChild(label);
-      wrap.appendChild(select);
+      wrap.appendChild(control);
       header.appendChild(wrap);
     }
   "))
@@ -423,7 +508,7 @@ datatable(arrivals_data,
       var table = $(el).find('table').DataTable();
       var card = el.closest('.card');
       var header = card ? card.querySelector('.card-header') : null;
-      if (!header || header.querySelector('.year-filter')) return;
+      if (!header || header.querySelector('.year-filter-wrap')) return;
 
       var wrap = document.createElement('div');
       wrap.className = 'year-filter-wrap';
@@ -431,26 +516,86 @@ datatable(arrivals_data,
       var label = document.createElement('label');
       label.className = 'year-filter-label';
       label.textContent = 'Year';
-      label.setAttribute('for', el.id + '-year');
 
-      var select = document.createElement('select');
-      select.className = 'year-filter form-select form-select-sm';
-      select.id = el.id + '-year';
-      years.forEach(function(yr) {
-        var opt = document.createElement('option');
-        opt.value = yr;
-        opt.textContent = yr;
-        select.appendChild(opt);
+      var control = document.createElement('div');
+      control.className = 'year-filter';
+      control.tabIndex = 0;
+      control.setAttribute('role', 'button');
+      control.setAttribute('aria-haspopup', 'listbox');
+      control.setAttribute('aria-expanded', 'false');
+
+      var valueSpan = document.createElement('span');
+      valueSpan.className = 'year-filter-value';
+      valueSpan.textContent = years[0];
+
+      var caret = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      caret.setAttribute('viewBox', '0 0 10 6');
+      caret.setAttribute('class', 'year-filter-caret');
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M1 1l4 4 4-4');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      caret.appendChild(path);
+
+      var menu = document.createElement('ul');
+      menu.className = 'year-filter-menu';
+      menu.setAttribute('role', 'listbox');
+
+      function closeMenu() {
+        control.classList.remove('open');
+        control.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', onDocClick);
+      }
+      function openMenu() {
+        control.classList.add('open');
+        control.setAttribute('aria-expanded', 'true');
+        document.addEventListener('click', onDocClick);
+      }
+      function onDocClick(e) {
+        if (!control.contains(e.target)) closeMenu();
+      }
+
+      years.forEach(function(yr, i) {
+        var li = document.createElement('li');
+        li.textContent = yr;
+        li.setAttribute('role', 'option');
+        if (i === 0) li.classList.add('active');
+        li.addEventListener('click', function(e) {
+          e.stopPropagation();
+          valueSpan.textContent = yr;
+          var items = menu.querySelectorAll('li');
+          for (var j = 0; j < items.length; j++) items[j].classList.remove('active');
+          li.classList.add('active');
+          table.clear();
+          table.rows.add(yearData[yr]);
+          table.draw();
+          closeMenu();
+        });
+        menu.appendChild(li);
       });
 
-      select.addEventListener('change', function() {
-        table.clear();
-        table.rows.add(yearData[this.value]);
-        table.draw();
+      control.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (control.classList.contains('open')) closeMenu(); else openMenu();
       });
+      control.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (control.classList.contains('open')) closeMenu(); else openMenu();
+        } else if (e.key === 'Escape') {
+          closeMenu();
+        }
+      });
+
+      control.appendChild(valueSpan);
+      control.appendChild(caret);
+      control.appendChild(menu);
 
       wrap.appendChild(label);
-      wrap.appendChild(select);
+      wrap.appendChild(control);
       header.appendChild(wrap);
     }
   "))
