@@ -74,6 +74,7 @@ $card-border-radius: 8px;
   height: calc(100vh - var(--ess-navbar-height)) !important;
   overflow-y: auto !important;
   padding: 24px 1.25rem 1.5rem !important;
+  background-color: transparent !important;
 }
 
 /* Hide bslib's built-in sidebar collapse/expand arrow */
@@ -85,7 +86,7 @@ $card-border-radius: 8px;
   margin-bottom: 1rem;
 }
 
-.ess-filter label {
+.ess-filter-label {
   display: block;
   font-family: "Outfit", sans-serif;
   font-weight: 500;
@@ -93,16 +94,75 @@ $card-border-radius: 8px;
   margin-bottom: 0.4rem;
 }
 
-#country-select.form-select {
-  font-family: "Inter", sans-serif !important;
-  font-size: 0.85rem !important;
-  font-weight: 400 !important;
-  padding: 0.4rem 2rem 0.4rem 0.75rem !important;
-  line-height: 1.5 !important;
-  border-color: rgba(237, 61, 66, 0.35); /* muted echo of ess_red */
+.ess-country-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  user-select: none;
 }
 
-#country-select.form-select:focus {
-  border-color: rgba(237, 61, 66, 0.6);
-  box-shadow: none;
+.ess-country-filter:focus {
+  outline: none;
+  border-color: #ced4da;
+}
+
+.ess-country-filter-caret {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  color: #555555;
+  transition: transform 0.15s ease;
+}
+
+.ess-country-filter.open .ess-country-filter-caret {
+  transform: rotate(180deg);
+}
+
+.ess-country-filter-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 20;
+  display: none;
+}
+
+.ess-country-filter.open .ess-country-filter-menu {
+  display: block;
+}
+
+.ess-country-filter-menu li {
+  padding: 0.3rem 0.6rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ess-country-filter-menu li:hover,
+.ess-country-filter-menu li.active {
+  background: #f2f2f2;
 }
