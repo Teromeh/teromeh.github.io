@@ -25,6 +25,12 @@ library(plotly)
 library(dplyr)
 library(tidyr)
 library(jsonlite)
+library(highcharter)
+library(leaflet)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(htmltools)
 
 #   agea     - age of respondent (numeric)
 #   ppltrst  - most people can be trusted (0-10)
@@ -175,6 +181,35 @@ total_n_plc <- vapply(trstplc_by_country, function(d) sum(d$n), numeric(1))
 bar_colors_by_country_plc <- lapply(trstplc_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
 })
+
+# ISO-3 codes for the choropleth map (Plotly's most reliable location key)
+country_iso3 <- c(
+  AT = "AUT", BE = "BEL", BG = "BGR", HR = "HRV", CY = "CYP",
+  CZ = "CZE", EE = "EST", FI = "FIN", FR = "FRA", DE = "DEU",
+  GR = "GRC", HU = "HUN", IS = "ISL", IE = "IRL", IL = "ISR",
+  IT = "ITA", LV = "LVA", LT = "LTU", ME = "MNE",
+  NL = "NLD", NO = "NOR", PL = "POL", PT = "PRT", RS = "SRB",
+  SK = "SVK", SI = "SVN", ES = "ESP", SE = "SWE",
+  CH = "CHE", UA = "UKR", GB = "GBR"
+)
+
+# Combined trust score per country: unweighted mean of the five per-country
+# averages already computed above (ppltrst, pplfair, pplhlp, trstplt, trstplc).
+# avg_scores* are indexed in the same order as groups (c("All", cntry_codes)),
+# so [-1] drops the "All" row and keeps only the per-country values.
+combined_avg_by_country <- data.frame(
+  cntry = cntry_codes,
+  cntry_label = cntry_labels,
+  iso3 = unname(country_iso3[cntry_codes]),
+  combined_avg = rowMeans(cbind(
+    avg_scores[-1],
+    avg_scores_fair[-1],
+    avg_scores_help[-1],
+    avg_scores_plt[-1],
+    avg_scores_plc[-1]
+  ))
+) |>
+  mutate(combined_avg = round(combined_avg, 2))
 
 # Annotation helpers
 
@@ -724,6 +759,93 @@ plot_ly(elementId = "trstplc-bar") |>
     plot_bgcolor = "white"
   ) |>
   config(displayModeBar = FALSE)
+```
+
+### Row {height="550px"}
+
+```{r}
+#| label: trust-map-highcharts
+#| warning: false
+#| message: false
+
+# Prepare data for Highcharts
+map_data <- combined_avg_by_country |>
+  mutate(
+    name = cntry_label,
+    value = combined_avg
+  )
+
+# Create Highcharts map with custom styling
+hcmap(
+  map = "custom/europe",
+  data = map_data,
+  value = "value",
+  joinBy = "name",
+  name = "Combined Trust Score",
+  dataLabels = list(enabled = FALSE)
+) |>
+  hc_title(
+    text = "<b>Combined Average by Country</b> <span style='color:#666666;font-weight:400;'>(average across all five trust measures, 0 - 10)</span>",
+    align = "left",
+    useHTML = TRUE,
+    style = list(
+      fontFamily = "Outfit, sans-serif",
+      fontSize = "14px",
+      color = "#1a1a1a"
+    )
+  ) |>
+  hc_colorAxis(
+    min = min(map_data$value, na.rm = TRUE),
+    max = max(map_data$value, na.rm = TRUE),
+    stops = color_stops(colors = c("#FCE4E4", "#ED3D42", "#6B1B1E")),
+    nullColor = "#f7f7f7"
+  ) |>
+  hc_tooltip(
+    useHTML = TRUE,
+    headerFormat = "",
+    formatter = JS("function() {
+      var val = this.point.value;
+      if (val === undefined || val === null) {
+        return '<b>' + this.point.name + '</b><br/>No data';
+      } else {
+        return '<b>' + this.point.name + '</b><br/>Combined trust: <b>' + val.toFixed(1) + '</b>';
+      }
+    }")
+  ) |>
+  hc_plotOptions(
+    series = list(
+      nullInteraction = TRUE, # lets countries with no data still respond to hover/tooltip
+      borderColor = "#cccccc",
+      borderWidth = 0.5,
+      states = list(
+        hover = list(
+          borderColor = "#1a1a1a",
+          borderWidth = 2
+        )
+      )
+    )
+  ) |>
+  hc_chart(
+    backgroundColor = "white",
+    style = list(
+      fontFamily = "Inter, sans-serif"
+    )
+  ) |>
+  hc_legend(
+    enabled = TRUE,
+    title = list(text = "Combined Trust Score"),
+    layout = "vertical",
+    align = "right",
+    verticalAlign = "middle",
+    itemStyle = list(
+      fontFamily = "Inter, sans-serif",
+      fontSize = "12px",
+      color = "#555555"
+    )
+  ) |>
+  hc_mapNavigation(
+    enabled = FALSE
+  )
 ```
 
 ### Row
