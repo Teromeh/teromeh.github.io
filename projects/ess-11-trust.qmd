@@ -803,6 +803,14 @@ hcmap(
   hc_tooltip(
     useHTML = TRUE,
     headerFormat = "",
+    backgroundColor = "#6B1B1E",
+    borderColor = "#6B1B1E",
+    borderRadius = 3,
+    style = list(
+      color = "#ffffff",
+      fontFamily = "Inter, sans-serif",
+      fontSize = "13px"
+    ),
     formatter = JS("function() {
       var val = this.point.value;
       if (val === undefined || val === null) {
@@ -814,7 +822,7 @@ hcmap(
   ) |>
   hc_plotOptions(
     series = list(
-      nullInteraction = TRUE, # lets countries with no data still respond to hover/tooltip
+      nullInteraction = TRUE, # lets countries with no data (e.g. Denmark) still respond to hover/tooltip
       borderColor = "#cccccc",
       borderWidth = 0.5,
       states = list(
@@ -844,6 +852,12 @@ hcmap(
     )
   ) |>
   hc_mapNavigation(
+    enabled = FALSE
+  ) |>
+  hc_exporting(
+    enabled = FALSE
+  ) |>
+  hc_credits(
     enabled = FALSE
   )
 ```
