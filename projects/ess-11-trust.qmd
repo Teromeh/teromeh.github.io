@@ -902,21 +902,44 @@ hcmap(
   hc_tooltip(
     useHTML = TRUE,
     headerFormat = "",
-    backgroundColor = "#6B1B1E",
-    borderColor = "#6B1B1E",
-    borderRadius = 3,
+    backgroundColor = "transparent",
+    borderWidth = 0,
+    shadow = FALSE,
     style = list(
-      color = "#ffffff",
       fontFamily = "Inter, sans-serif",
       fontSize = "13px"
     ),
     formatter = JS("function() {
       var val = this.point.value;
-      if (val === undefined || val === null) {
-        return '<b>' + this.point.name + '</b><br/>No data';
-      } else {
-        return '<b>' + this.point.name + '</b><br/>Combined trust: <b>' + val.toFixed(1) + '</b>';
+      var fillColor = this.point.color || '#f7f7f7';
+
+      function hexToRgb(hex) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) {
+          hex = hex.split('').map(function (c) { return c + c; }).join('');
+        }
+        var num = parseInt(hex, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
       }
+      function darken(hex, factor) {
+        var rgb = hexToRgb(hex);
+        return 'rgb(' + Math.round(rgb.r * factor) + ',' + Math.round(rgb.g * factor) + ',' + Math.round(rgb.b * factor) + ')';
+      }
+
+      var rgb = hexToRgb(fillColor);
+      var brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+      var textColor = brightness > 150 ? '#1a1a1a' : '#ffffff';
+      var borderColor = darken(fillColor, 0.75);
+
+      var content;
+      if (val === undefined || val === null) {
+        content = '<b>' + this.point.name + '</b><br/>No data';
+      } else {
+        content = '<b>' + this.point.name + '</b><br/>Combined trust: <b>' + val.toFixed(1) + '</b>';
+      }
+
+      return '<div style=\"background-color:' + fillColor + ';border:1px solid ' + borderColor +
+        ';border-radius:3px;padding:6px 10px;color:' + textColor + ';\">' + content + '</div>';
     }")
   ) |>
   hc_plotOptions(
