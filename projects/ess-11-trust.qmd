@@ -182,6 +182,27 @@ bar_colors_by_country_plc <- lapply(trstplc_by_country, function(d) {
   ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
 })
 
+trstlgl_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(trstlgl)) |>
+    count(trstlgl) |>
+    complete(trstlgl = 0:10, fill = list(n = 0)) |>
+    arrange(trstlgl) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_lgl <- vapply(trstlgl_by_country, function(d) {
+  round(weighted.mean(d$trstlgl, w = d$n), 1)
+}, numeric(1))
+
+total_n_lgl <- vapply(trstlgl_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_lgl <- lapply(trstlgl_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
 # ISO-3 codes for the choropleth map (Plotly's most reliable location key)
 country_iso3 <- c(
   AT = "AUT", BE = "BEL", BG = "BGR", HR = "HRV", CY = "CYP",
@@ -193,8 +214,8 @@ country_iso3 <- c(
   CH = "CHE", UA = "UKR", GB = "GBR"
 )
 
-# Combined trust score per country: unweighted mean of the five per-country
-# averages already computed above (ppltrst, pplfair, pplhlp, trstplt, trstplc).
+# Combined trust score per country: unweighted mean of the six per-country
+# averages already computed above (ppltrst, pplfair, pplhlp, trstplt, trstplc, trstlgl).
 # avg_scores* are indexed in the same order as groups (c("All", cntry_codes)),
 # so [-1] drops the "All" row and keeps only the per-country values.
 combined_avg_by_country <- data.frame(
@@ -206,7 +227,8 @@ combined_avg_by_country <- data.frame(
     avg_scores_fair[-1],
     avg_scores_help[-1],
     avg_scores_plt[-1],
-    avg_scores_plc[-1]
+    avg_scores_plc[-1],
+    avg_scores_lgl[-1]
   ))
 ) |>
   mutate(combined_avg = round(combined_avg, 2))
@@ -280,6 +302,17 @@ avg_annotation_plc <- function(avg) {
   )
 }
 
+avg_annotation_lgl <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
 # Pre-compute the full per-country trace + annotation data
 
 build_group_data <- function(by_country, avg_scores, total_n, bar_colors, avg_annotation_fn) {
@@ -306,6 +339,8 @@ plt_group_data <- build_group_data(trstplt_by_country, avg_scores_plt, total_n_p
                                     bar_colors_by_country_plt, avg_annotation_plt)
 plc_group_data <- build_group_data(trstplc_by_country, avg_scores_plc, total_n_plc,
                                     bar_colors_by_country_plc, avg_annotation_plc)
+lgl_group_data <- build_group_data(trstlgl_by_country, avg_scores_lgl, total_n_lgl,
+                                    bar_colors_by_country_lgl, avg_annotation_lgl)
 
 filter_js <- paste0(
   "window.essTrustData = ", as.character(jsonlite::toJSON(trust_group_data, auto_unbox = TRUE)), ";\n",
@@ -313,6 +348,7 @@ filter_js <- paste0(
   "window.essHelpData = ", as.character(jsonlite::toJSON(help_group_data, auto_unbox = TRUE)), ";\n",
   "window.essPltData = ", as.character(jsonlite::toJSON(plt_group_data, auto_unbox = TRUE)), ";\n",
   "window.essPlcData = ", as.character(jsonlite::toJSON(plc_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essLglData = ", as.character(jsonlite::toJSON(lgl_group_data, auto_unbox = TRUE)), ";\n",
   "
 function essFindGraphDiv(preferredId, positionIndex) {
   var el = document.getElementById(preferredId);
@@ -359,18 +395,21 @@ window.essUpdateCountry = function (idx) {
     var h = window.essHelpData[idx];
     var p = window.essPltData[idx];
     var c = window.essPlcData[idx];
+    var l = window.essLglData[idx];
     var trustEl = essFindGraphDiv('ppltrst-bar', 0);
     var fairEl = essFindGraphDiv('pplfair-bar', 1);
     var helpEl = essFindGraphDiv('pplhlp-bar', 2);
     var pltEl = essFindGraphDiv('trstplt-bar', 3);
     var plcEl = essFindGraphDiv('trstplc-bar', 4);
-    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null, pltEl ? pltEl.id : null, plcEl ? plcEl.id : null);
+    var lglEl = essFindGraphDiv('trstlgl-bar', 5);
+    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null, pltEl ? pltEl.id : null, plcEl ? plcEl.id : null, lglEl ? lglEl.id : null);
 
     essAnimateBars(trustEl, t);
     essAnimateBars(fairEl, f);
     essAnimateBars(helpEl, h);
     essAnimateBars(pltEl, p);
     essAnimateBars(plcEl, c);
+    essAnimateBars(lglEl, l);
   } catch (err) {
     console.error('ESS country filter update failed:', err);
   }
@@ -761,6 +800,66 @@ plot_ly(elementId = "trstplc-bar") |>
   config(displayModeBar = FALSE)
 ```
 
+### Row
+
+```{r}
+#| label: trstlgl-bar
+initial_lgl <- trstlgl_by_country[[1]]
+
+plot_ly(elementId = "trstlgl-bar") |>
+  add_trace(
+    data = initial_lgl,
+    x = ~factor(trstlgl, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_lgl[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Trust in the Legal System</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: No trust at all, 10: Complete trust)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_lgl(avg_scores_lgl[1]), n_annotation(total_n_lgl[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
 ### Row {height="550px"}
 
 ```{r}
@@ -785,7 +884,7 @@ hcmap(
   dataLabels = list(enabled = FALSE)
 ) |>
   hc_title(
-    text = "<b>Combined Average by Country</b> <span style='color:#666666;font-weight:400;'>(average across all five trust measures, 0 - 10)</span>",
+    text = "<b>Combined Average by Country</b> <span style='color:#666666;font-weight:400;'>(average across all six trust measures, 0 - 10)</span>",
     align = "left",
     useHTML = TRUE,
     style = list(
