@@ -1,0 +1,52 @@
+---
+title: "Finnish municipalities population trends"
+format: 
+  dashboard:
+    theme:
+      light: [litera, custom.scss]
+      dark: [darkly, custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+library(DT)
+
+# TODO: load municipality population data here, e.g.
+# data <- readRDS("fi-municipalities-population.rds")
+
+title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
+accent_color <- "#FCBC19"
+```
+
+## Row
+
+### Column
+
+```{r}
+#| label: placeholder
+# TODO: add charts / tables for municipality population trends
+```
+
+## Row
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://pxdata.stat.fi/PxWeb/pxweb/fi/Kuntien_avainluvut/" target="_blank" style="color: #555555; text-decoration: underline;">Tilastokeskus</a>
+</p>')
+```
