@@ -1,5 +1,5 @@
 ---
-title: "Finnish municipalities population trends"
+title: "Finnish municipalities - Population trends"
 format: 
   dashboard:
     theme:
@@ -25,11 +25,7 @@ library(plotly)
 library(dplyr)
 library(DT)
 
-# TODO: load municipality population data here, e.g.
-# data <- readRDS("fi-municipalities-population.rds")
-
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
-accent_color <- "#FCBC19"
 ```
 
 ## Row
@@ -38,7 +34,6 @@ accent_color <- "#FCBC19"
 
 ```{r}
 #| label: placeholder
-# TODO: add charts / tables for municipality population trends
 ```
 
 ## Row
