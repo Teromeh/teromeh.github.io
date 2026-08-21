@@ -1,5 +1,5 @@
 ---
-title: "Finnish municipalities - Population trends"
+title: "FI municipalities - Population development"
 format: 
   dashboard:
     theme:
@@ -11,6 +11,127 @@ format:
         <link rel="icon" href="favicon.svg" type="image/svg+xml">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        <style>
+        .fi-filter {
+          margin-bottom: 1rem;
+        }
+        .fi-filter-label {
+          display: block;
+          font-family: 'Inter', sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--bs-secondary-color, #6c757d);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          margin-bottom: 0.4rem;
+        }
+        .fi-muni-filter {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+          padding: 0.55rem 0.7rem;
+          border: 1px solid var(--bs-border-color, #dee2e6);
+          border-radius: 6px;
+          background: var(--bs-body-bg, #fff);
+          color: var(--bs-body-color, #1a1a1a);
+          font-family: 'Inter', sans-serif;
+          font-size: 13.5px;
+          cursor: pointer;
+          user-select: none;
+        }
+        .fi-muni-filter:hover {
+          border-color: #101622;
+        }
+        .fi-muni-filter-value {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fi-muni-filter-caret {
+          flex: 0 0 auto;
+          width: 10px;
+          height: 6px;
+          color: var(--bs-secondary-color, #6c757d);
+        }
+        .fi-muni-filter.open .fi-muni-filter-caret {
+          transform: rotate(180deg);
+        }
+        .fi-muni-filter-menu {
+          display: none;
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          max-height: 320px;
+          overflow-y: auto;
+          margin: 0;
+          padding: 0;
+          background: var(--bs-body-bg, #fff);
+          border: 1px solid var(--bs-border-color, #dee2e6);
+          border-radius: 6px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          z-index: 1000;
+        }
+        .fi-muni-filter.open .fi-muni-filter-menu {
+          display: block;
+        }
+        .fi-muni-filter-search-wrap {
+          position: sticky;
+          top: 0;
+          padding: 0.4rem 0.6rem;
+          background: var(--bs-body-bg, #fff);
+          border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        }
+        .fi-muni-filter-search {
+          width: 100%;
+          box-sizing: border-box;
+          border: 1px solid var(--bs-border-color, #dee2e6);
+          border-radius: 4px;
+          padding: 0.3rem 0.5rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          color: var(--bs-body-color, #1a1a1a);
+          background: var(--bs-body-bg, #fff);
+        }
+        .fi-muni-filter-search:focus {
+          outline: none;
+          border-color: #101622;
+        }
+        .fi-muni-filter-list {
+          margin: 0;
+          padding: 0.3rem 0;
+          list-style: none;
+        }
+        .fi-muni-option {
+          padding: 0.4rem 0.9rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 13.5px;
+          color: var(--bs-body-color, #1a1a1a);
+          cursor: pointer;
+        }
+        .fi-muni-option:hover {
+          background: var(--bs-tertiary-bg, #f4f4f4);
+        }
+        .fi-muni-option.active {
+          font-weight: 600;
+          color: #101622;
+        }
+        .fi-muni-option.is-hidden {
+          display: none;
+        }
+        .fi-muni-no-results {
+          display: none;
+          padding: 0.4rem 0.9rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          color: var(--bs-secondary-color, #6c757d);
+        }
+        .fi-muni-no-results.show {
+          display: block;
+        }
+        </style>
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -24,19 +145,267 @@ format:
 library(plotly)
 library(dplyr)
 library(DT)
+library(jsonlite)
+library(stringi)
 
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
+
+fi_dark <- "#101622"
+
+data <- readRDS("asukasluku-kunnat.rds")
+data$Municipality <- as.character(data$Municipality)
+
+# Finnish-locale alphabetical order (Å, Ä, Ö sort after Z)
+munis <- stri_sort(unique(data$Municipality), locale = "fi_FI")
+groups <- c("All", munis)
+
+pop_by_group <- lapply(groups, function(g) {
+  d <- if (g == "All") {
+    data |> group_by(Year) |> summarise(Count = sum(Count), .groups = "drop")
+  } else {
+    data |> filter(Municipality == g) |> select(Year, Count)
+  }
+  d |> arrange(Year)
+})
+
+# Pre-compute the full per-municipality trace data
+line_group_data <- lapply(seq_along(groups), function(i) {
+  d <- pop_by_group[[i]]
+  pad <- (max(d$Count) - min(d$Count)) * 0.1
+  if (pad == 0) pad <- max(d$Count) * 0.05
+
+  list(
+    x = I(d$Year),
+    y = I(d$Count),
+    hovertext = I(paste0("<b>", d$Year, "</b><br>Population: <b>",
+                          formatC(round(d$Count), big.mark = " ", format = "d"), "</b>")),
+    yrange = I(c(min(d$Count) - pad, max(d$Count) + pad))
+  )
+})
+
+filter_js <- paste0(
+  "window.popData = ", as.character(jsonlite::toJSON(line_group_data, auto_unbox = TRUE)), ";\n",
+  "
+function popFindGraphDiv(preferredId, positionIndex) {
+  var el = document.getElementById(preferredId);
+  if (el && el.data) return el;
+
+  var all = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot'));
+  var byId = all.find(function (e) { return e.id && e.id.indexOf(preferredId) !== -1; });
+  if (byId) return byId;
+
+  if (all.length > positionIndex) return all[positionIndex];
+  return null;
+}
+
+function popUpdateLine(el, g) {
+  if (!g || !el) return;
+  Plotly.update(el, {
+    x: [g.x],
+    y: [g.y],
+    hovertext: [g.hovertext]
+  }, {
+    'yaxis.range': g.yrange
+  }, [0]);
+}
+
+window.popUpdateMunicipality = function (idx) {
+  try {
+    var g = window.popData[idx];
+    var el = popFindGraphDiv('population-line', 0);
+    popUpdateLine(el, g);
+  } catch (err) {
+    console.error('Population filter update failed:', err);
+  }
+};
+
+function popInitFilter() {
+  var control = document.getElementById('municipality-filter');
+  if (!control || control.getAttribute('data-fi-init') === '1') return;
+  control.setAttribute('data-fi-init', '1');
+
+  var valueSpan = control.querySelector('.fi-muni-filter-value');
+  var menu = control.querySelector('.fi-muni-filter-menu');
+  var items = menu ? menu.querySelectorAll('.fi-muni-option') : [];
+  var searchInput = control.querySelector('.fi-muni-filter-search');
+  var noResults = menu ? menu.querySelector('.fi-muni-no-results') : null;
+
+  function filterItems(query) {
+    var q = query.trim().toLowerCase();
+    var anyVisible = false;
+    Array.prototype.forEach.call(items, function (li) {
+      var text = li.textContent.toLowerCase();
+      var match = q === '' || text.split(/[\\s-]+/).some(function (word) {
+        return word.indexOf(q) === 0;
+      });
+      li.classList.toggle('is-hidden', !match);
+      if (match) anyVisible = true;
+    });
+    if (noResults) noResults.classList.toggle('show', !anyVisible);
+  }
+
+  function resetSearch() {
+    if (searchInput) searchInput.value = '';
+    filterItems('');
+  }
+
+  function closeMenu() {
+    control.classList.remove('open');
+    control.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onDocClick);
+  }
+  function openMenu() {
+    control.classList.add('open');
+    control.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClick);
+    resetSearch();
+    if (searchInput) {
+      setTimeout(function () { searchInput.focus(); }, 0);
+    }
+  }
+  function onDocClick(e) {
+    if (!control.contains(e.target)) closeMenu();
+  }
+
+  Array.prototype.forEach.call(items, function (li) {
+    li.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var idx = parseInt(li.getAttribute('data-index'), 10);
+      valueSpan.textContent = li.textContent;
+      Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
+      li.classList.add('active');
+      window.popUpdateMunicipality(idx);
+      closeMenu();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('click', function (e) {
+      e.stopPropagation();
+    });
+    searchInput.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        closeMenu();
+        control.focus();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        var firstVisible = menu.querySelector('.fi-muni-option:not(.is-hidden)');
+        if (firstVisible) firstVisible.click();
+      }
+    });
+    searchInput.addEventListener('input', function () {
+      filterItems(searchInput.value);
+    });
+  }
+
+  control.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (control.classList.contains('open')) closeMenu(); else openMenu();
+  });
+  control.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (control.classList.contains('open')) closeMenu(); else openMenu();
+    } else if (e.key === 'Escape') {
+      closeMenu();
+    }
+  });
+}
+popInitFilter();
+"
+)
+writeLines(filter_js, "population-filter.js")
 ```
 
-## Row
-
-### Column
+## {.sidebar width="200px"}
 
 ```{r}
-#| label: placeholder
+#| label: municipality-filter
+#| output: asis
+options_html <- paste0(
+  '<li class="fi-muni-option', ifelse(seq_along(groups) == 1, ' active', ''),
+  '" role="option" data-index="', seq_along(groups) - 1, '">', groups, '</li>',
+  collapse = "\n"
+)
+
+cat(paste0(
+  '<div class="fi-filter">',
+  '<label class="fi-filter-label">Municipality</label>',
+  '<div class="fi-muni-filter" id="municipality-filter" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">',
+  '<span class="fi-muni-filter-value">', groups[1], '</span>',
+  '<svg viewBox="0 0 10 6" class="fi-muni-filter-caret"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  '<div class="fi-muni-filter-menu">',
+  '<div class="fi-muni-filter-search-wrap">',
+  '<input type="text" class="fi-muni-filter-search" placeholder="Search\u2026" autocomplete="off" aria-label="Search">',
+  '</div>',
+  '<ul class="fi-muni-filter-list" role="listbox">',
+  options_html,
+  '<li class="fi-muni-no-results">No matches</li>',
+  '</ul>',
+  '</div>',
+  '</div>',
+  '</div>',
+  '<script src="population-filter.js"></script>'
+))
 ```
 
-## Row
+## Column
+
+### Row {height="480px"}
+
+```{r}
+#| label: population-line
+initial <- pop_by_group[[1]]
+initial_hover <- paste0("<b>", initial$Year, "</b><br>Population: <b>",
+                         formatC(round(initial$Count), big.mark = " ", format = "d"), "</b>")
+initial_yrange <- unlist(line_group_data[[1]]$yrange)
+
+plot_ly(elementId = "population-line") |>
+  add_trace(
+    data = initial,
+    x = ~Year,
+    y = ~Count,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = fi_dark, width = 3, shape = "spline"),
+    fill = "tozeroy",
+    fillcolor = "rgba(255, 204, 1, 0.6)",
+    hovertext = initial_hover,
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = "<b>Population Development</b> <span style='color:#666666;font-weight:400;'>(1990 \u2013 2025)</span>",
+      font = title_font,
+      x = 0
+    ),
+    margin = list(t = 60, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = fi_dark,
+      bordercolor = fi_dark,
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Year",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 dtick = 5,
+                 tickfont = list(family = "Inter, sans-serif", size = 12),
+                 fixedrange = TRUE),
+    yaxis = list(title = "", showgrid = TRUE, gridcolor = "#eeeeee", showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 range = initial_yrange,
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row
 
 ```{r}
 #| label: footer
