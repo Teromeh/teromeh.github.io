@@ -1,5 +1,5 @@
 ---
-title: "Finnish municipalities - Population trends"
+title: "FI municipalities - Population development"
 format: 
   dashboard:
     theme:
@@ -156,7 +156,6 @@ format:
           line-height: 1.35;
         }
         .fi-stat-pct {
-          font-family: 'Inter', sans-serif;
           font-weight: 700;
         }
         .fi-stat-positive {
