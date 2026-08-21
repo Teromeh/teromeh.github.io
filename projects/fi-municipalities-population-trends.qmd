@@ -1,5 +1,5 @@
 ---
-title: "FI municipalities - Population development"
+title: "Finnish municipalities - Population trends"
 format: 
   dashboard:
     theme:
