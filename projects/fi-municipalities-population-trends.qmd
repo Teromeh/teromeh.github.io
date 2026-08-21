@@ -131,6 +131,40 @@ format:
         .fi-muni-no-results.show {
           display: block;
         }
+        .fi-stats {
+          margin-top: 0.75rem;
+        }
+        .fi-stats-label {
+          display: block;
+          font-family: 'Inter', sans-serif;
+          font-size: 11px;
+          font-weight: 500;
+          color: var(--bs-secondary-color, #6c757d);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          margin-bottom: 0.45rem;
+        }
+        .fi-stats-row {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+        .fi-stat-value {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1.35;
+        }
+        .fi-stat-pct {
+          font-family: 'Inter', sans-serif;
+          font-weight: 700;
+        }
+        .fi-stat-positive {
+          color: #2f9e44;
+        }
+        .fi-stat-negative {
+          color: #e03131;
+        }
         </style>
     nav-buttons:
       - icon: envelope
@@ -183,8 +217,21 @@ line_group_data <- lapply(seq_along(groups), function(i) {
   )
 })
 
+# Pre-compute the first-year -> last-year change (absolute + %) per group
+first_year <- min(data$Year)
+last_year <- max(data$Year)
+
+change_group_data <- lapply(pop_by_group, function(d) {
+  first <- d$Count[1]
+  last <- d$Count[nrow(d)]
+  diff <- last - first
+  pct <- if (first != 0) (diff / first) * 100 else 0
+  list(diff = diff, pct = pct)
+})
+
 filter_js <- paste0(
   "window.popData = ", as.character(jsonlite::toJSON(line_group_data, auto_unbox = TRUE)), ";\n",
+  "window.popChangeData = ", as.character(jsonlite::toJSON(change_group_data, auto_unbox = TRUE)), ";\n",
   "
 function popFindGraphDiv(preferredId, positionIndex) {
   var el = document.getElementById(preferredId);
@@ -209,11 +256,35 @@ function popUpdateLine(el, g) {
   }, [0]);
 }
 
+function popFormatThousands(n) {
+  var s = Math.round(Math.abs(n)).toString();
+  return s.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ' ');
+}
+
+function popUpdateChange(idx) {
+  var c = window.popChangeData[idx];
+  var absEl = document.getElementById('population-change-abs');
+  var pctEl = document.getElementById('population-change-pct');
+  if (!c || !absEl || !pctEl) return;
+
+  var positive = c.diff >= 0;
+  var absStr = (positive ? '+ ' : '- ') + popFormatThousands(c.diff);
+  var pctStr = (positive ? '+ ' : '- ') + Math.abs(c.pct).toFixed(1) + '%';
+
+  absEl.textContent = absStr;
+  pctEl.textContent = pctStr;
+  absEl.classList.toggle('fi-stat-positive', positive);
+  absEl.classList.toggle('fi-stat-negative', !positive);
+  pctEl.classList.toggle('fi-stat-positive', positive);
+  pctEl.classList.toggle('fi-stat-negative', !positive);
+}
+
 window.popUpdateMunicipality = function (idx) {
   try {
     var g = window.popData[idx];
     var el = popFindGraphDiv('population-line', 0);
     popUpdateLine(el, g);
+    popUpdateChange(idx);
   } catch (err) {
     console.error('Population filter update failed:', err);
   }
@@ -329,6 +400,15 @@ options_html <- paste0(
   collapse = "\n"
 )
 
+# Initial (group 1 = "All") change stats, formatted the same way the JS will
+init_change <- change_group_data[[1]]
+init_positive <- init_change$diff >= 0
+init_abs_str <- paste0(ifelse(init_positive, "+ ", "- "),
+                        formatC(abs(round(init_change$diff)), big.mark = " ", format = "d"))
+init_pct_str <- paste0(ifelse(init_positive, "+ ", "- "),
+                        sprintf("%.1f", abs(init_change$pct)), "%")
+init_class <- ifelse(init_positive, "fi-stat-positive", "fi-stat-negative")
+
 cat(paste0(
   '<div class="fi-filter">',
   '<label class="fi-filter-label">Municipality</label>',
@@ -344,6 +424,13 @@ cat(paste0(
   '<li class="fi-muni-no-results">No matches</li>',
   '</ul>',
   '</div>',
+  '</div>',
+  '</div>',
+  '<div class="fi-stats">',
+  '<label class="fi-stats-label">Change ', first_year, '\u2013', last_year, '</label>',
+  '<div class="fi-stats-row">',
+  '<span class="fi-stat-value ', init_class, '" id="population-change-abs">', init_abs_str, '</span>',
+  '<span class="fi-stat-value fi-stat-pct ', init_class, '" id="population-change-pct">', init_pct_str, '</span>',
   '</div>',
   '</div>',
   '<script src="population-filter.js"></script>'
