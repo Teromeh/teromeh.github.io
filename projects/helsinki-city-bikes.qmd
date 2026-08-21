@@ -610,6 +610,7 @@ datatable(arrivals_data,
 ```{r}
 #| label: footer
 #| output: asis
+#| expandable: false
 cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
 Data: <a href="https://www.hsl.fi/avoindata" target="_blank" style="color: #555555; text-decoration: underline;">HSL</a>
 </p>')
