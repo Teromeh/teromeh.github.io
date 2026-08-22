@@ -1,5 +1,5 @@
 ---
-title: "FI municipalities - Population development"
+title: "Finnish municipalities - Population trends"
 format: 
   dashboard:
     theme:
@@ -140,7 +140,6 @@ format:
           font-size: 11px;
           font-weight: 500;
           color: var(--bs-secondary-color, #6c757d);
-          text-transform: uppercase;
           letter-spacing: 0.04em;
           margin-bottom: 0.45rem;
         }
@@ -151,7 +150,7 @@ format:
         }
         .fi-stat-value {
           font-family: 'Outfit', sans-serif;
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 700;
           line-height: 1.35;
         }
@@ -163,6 +162,23 @@ format:
         }
         .fi-stat-negative {
           color: #e03131;
+        }
+        .fi-wiki-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: #101622;
+          text-decoration: none;
+        }
+        .fi-wiki-link:hover {
+          text-decoration: underline;
+        }
+        .fi-wiki-link-icon {
+          opacity: 0.5;
+          font-weight: 400;
         }
         </style>
     nav-buttons:
@@ -191,6 +207,12 @@ data$Municipality <- as.character(data$Municipality)
 # Finnish-locale alphabetical order (Å, Ä, Ö sort after Z)
 munis <- stri_sort(unique(data$Municipality), locale = "fi_FI")
 groups <- c("All", munis)
+
+# Guessed fi.wikipedia.org article URL per group ("" for "All")
+wiki_urls <- vapply(groups, function(g) {
+  if (identical(g, "All")) return("")
+  paste0("https://fi.wikipedia.org/wiki/", utils::URLencode(gsub(" ", "_", g), reserved = FALSE))
+}, character(1), USE.NAMES = FALSE)
 
 pop_by_group <- lapply(groups, function(g) {
   d <- if (g == "All") {
@@ -225,12 +247,14 @@ change_group_data <- lapply(pop_by_group, function(d) {
   last <- d$Count[nrow(d)]
   diff <- last - first
   pct <- if (first != 0) (diff / first) * 100 else 0
-  list(diff = diff, pct = pct)
+  list(diff = diff, pct = pct, latest = last)
 })
 
 filter_js <- paste0(
   "window.popData = ", as.character(jsonlite::toJSON(line_group_data, auto_unbox = TRUE)), ";\n",
   "window.popChangeData = ", as.character(jsonlite::toJSON(change_group_data, auto_unbox = TRUE)), ";\n",
+  "window.popGroups = ", as.character(jsonlite::toJSON(groups)), ";\n",
+  "window.popWikiUrls = ", as.character(jsonlite::toJSON(wiki_urls)), ";\n",
   "
 function popFindGraphDiv(preferredId, positionIndex) {
   var el = document.getElementById(preferredId);
@@ -262,9 +286,14 @@ function popFormatThousands(n) {
 
 function popUpdateChange(idx) {
   var c = window.popChangeData[idx];
+  var latestEl = document.getElementById('population-latest');
   var absEl = document.getElementById('population-change-abs');
   var pctEl = document.getElementById('population-change-pct');
-  if (!c || !absEl || !pctEl) return;
+  if (!c) return;
+
+  if (latestEl) latestEl.textContent = popFormatThousands(c.latest);
+
+  if (!absEl || !pctEl) return;
 
   var positive = c.diff >= 0;
   var absStr = (positive ? '+ ' : '- ') + popFormatThousands(c.diff);
@@ -278,12 +307,30 @@ function popUpdateChange(idx) {
   pctEl.classList.toggle('fi-stat-negative', !positive);
 }
 
+function popUpdateWiki(idx) {
+  var wrap = document.getElementById('population-wiki');
+  var link = document.getElementById('population-wiki-link');
+  if (!wrap || !link) return;
+
+  var url = window.popWikiUrls[idx];
+  if (!url) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  var textEl = link.querySelector('.fi-wiki-link-text');
+  if (textEl) textEl.textContent = window.popGroups[idx];
+  link.href = url;
+  wrap.style.display = 'block';
+}
+
 window.popUpdateMunicipality = function (idx) {
   try {
     var g = window.popData[idx];
     var el = popFindGraphDiv('population-line', 0);
     popUpdateLine(el, g);
     popUpdateChange(idx);
+    popUpdateWiki(idx);
   } catch (err) {
     console.error('Population filter update failed:', err);
   }
@@ -399,6 +446,9 @@ options_html <- paste0(
   collapse = "\n"
 )
 
+# Initial (group 1 = "All") latest population, formatted the same way the JS will
+init_latest_str <- formatC(round(change_group_data[[1]]$latest), big.mark = " ", format = "d")
+
 # Initial (group 1 = "All") change stats, formatted the same way the JS will
 init_change <- change_group_data[[1]]
 init_positive <- init_change$diff >= 0
@@ -407,6 +457,10 @@ init_abs_str <- paste0(ifelse(init_positive, "+ ", "- "),
 init_pct_str <- paste0(ifelse(init_positive, "+ ", "- "),
                         sprintf("%.1f", abs(init_change$pct)), "%")
 init_class <- ifelse(init_positive, "fi-stat-positive", "fi-stat-negative")
+
+# Initial (group 1 = "All") wikipedia link: hidden, since "All" has no article
+init_wiki_url <- wiki_urls[1]
+init_wiki_display <- if (nzchar(init_wiki_url)) "block" else "none"
 
 cat(paste0(
   '<div class="fi-filter">',
@@ -426,11 +480,24 @@ cat(paste0(
   '</div>',
   '</div>',
   '<div class="fi-stats">',
-  '<label class="fi-stats-label">Change ', first_year, '\u2013', last_year, '</label>',
+  '<label class="fi-stats-label">Population ', last_year, '</label>',
+  '<div class="fi-stats-row">',
+  '<span class="fi-stat-value" id="population-latest">', init_latest_str, '</span>',
+  '</div>',
+  '</div>',
+  '<div class="fi-stats">',
+  '<label class="fi-stats-label">Change from ', first_year, ' to ', last_year, '</label>',
   '<div class="fi-stats-row">',
   '<span class="fi-stat-value ', init_class, '" id="population-change-abs">', init_abs_str, '</span>',
   '<span class="fi-stat-value fi-stat-pct ', init_class, '" id="population-change-pct">', init_pct_str, '</span>',
   '</div>',
+  '</div>',
+  '<div class="fi-stats" id="population-wiki" style="display:', init_wiki_display, ';">',
+  '<label class="fi-stats-label">Wikipedia</label>',
+  '<a href="', init_wiki_url, '" id="population-wiki-link" class="fi-wiki-link" target="_blank" rel="noopener">',
+  '<span class="fi-wiki-link-text">', groups[1], '</span>',
+  '<span class="fi-wiki-link-icon">\u2197</span>',
+  '</a>',
   '</div>',
   '<script src="population-filter.js"></script>'
 ))
