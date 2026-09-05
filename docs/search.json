@@ -1,0 +1,9 @@
+[
+  {
+    "objectID": "test.html",
+    "href": "test.html",
+    "title": "Test Page",
+    "section": "",
+    "text": "If you can see this page live on the site, the Quarto render pipeline is working correctly."
+  }
+]

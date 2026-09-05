@@ -1,0 +1,5 @@
+---
+title: "Test Page"
+---
+
+If you can see this page live on the site, the Quarto render pipeline is working correctly.

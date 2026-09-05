@@ -1,0 +1,12 @@
+project:
+  type: website
+  output-dir: docs
+
+format:
+  html:
+    lib-dir: site_libs
+
+resources:
+  - index.html
+  - style.css
+  - favicon.svg
