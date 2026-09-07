@@ -1,0 +1,1012 @@
+---
+title: "The European Social Survey, round 11 (2023/2024) - Trust"
+format: 
+  dashboard:
+    theme:
+      light: [litera, ../custom.scss]
+      dark: [darkly, ../custom.scss]
+    scrolling: true
+    include-in-header:
+      text: |
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    nav-buttons:
+      - icon: envelope
+        href: mailto:teromeh@proton.me
+      - icon: house-door
+        href: ../
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(jsonlite)
+library(highcharter)
+library(leaflet)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(htmltools)
+
+#   agea     - age of respondent (numeric)
+#   ppltrst  - most people can be trusted (0-10)
+#   pplfair  - most people try to be fair (0-10)
+#   pplhlp   - most people try to be helpful (0-10)
+#   trstprl  - trust in country's parliament (0-10)
+#   trstlgl  - trust in the legal system (0-10)
+#   trstplc  - trust in the police (0-10)
+#   trstplt  - trust in politicians (0-10)
+#   trstprt  - trust in political parties (0-10)
+#   trstep   - trust in the European Parliament (0-10)
+#   trstun   - trust in the United Nations (0-10)
+
+data <- readRDS("data/ess-11-trust.rds")
+
+title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+ess_red <- "#ED3D42"
+
+darken_hex <- function(hex, factor = 0.8) {
+  rgb_vals <- col2rgb(hex) * factor
+  rgb(rgb_vals[1], rgb_vals[2], rgb_vals[3], maxColorValue = 255)
+}
+ess_red_dark <- darken_hex(ess_red, factor = 0.8)
+
+country_names <- c(
+  AT = "Austria", BE = "Belgium", BG = "Bulgaria", HR = "Croatia", CY = "Cyprus",
+  CZ = "Czechia", EE = "Estonia", FI = "Finland", FR = "France", DE = "Germany",
+  GR = "Greece", HU = "Hungary", IS = "Iceland", IE = "Ireland", IL = "Israel",
+  IT = "Italy", LV = "Latvia", LT = "Lithuania", ME = "Montenegro",
+  NL = "Netherlands", NO = "Norway", PL = "Poland", PT = "Portugal", RS = "Serbia",
+  SK = "Slovakia", SI = "Slovenia", ES = "Spain", SE = "Sweden",
+  CH = "Switzerland", UA = "Ukraine", GB = "United Kingdom"
+)
+
+cntry_codes <- sort(unique(data$cntry))
+cntry_labels <- unname(ifelse(cntry_codes %in% names(country_names),
+                               country_names[cntry_codes], cntry_codes))
+name_order <- order(cntry_labels)
+cntry_codes <- cntry_codes[name_order]
+cntry_labels <- cntry_labels[name_order]
+
+groups <- c("All", cntry_codes)
+group_labels <- c("All", cntry_labels)
+group_iso2 <- c(NA_character_, tolower(cntry_codes))
+
+flag_img_html <- function(iso2) {
+  if (is.na(iso2)) return("")
+  paste0(
+    '<img src="https://flagcdn.com/24x18/', iso2, '.png" ',
+    'width="16" height="12" alt="" ',
+    'style="vertical-align:middle;margin-right:6px;" ',
+    'onerror="this.style.display=\'none\'" />'
+  )
+}
+
+ppltrst_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(ppltrst)) |>
+    count(ppltrst) |>
+    complete(ppltrst = 0:10, fill = list(n = 0)) |>
+    arrange(ppltrst) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores <- vapply(ppltrst_by_country, function(d) {
+  round(weighted.mean(d$ppltrst, w = d$n), 1)
+}, numeric(1))
+
+total_n <- vapply(ppltrst_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country <- lapply(ppltrst_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+pplfair_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(pplfair)) |>
+    count(pplfair) |>
+    complete(pplfair = 0:10, fill = list(n = 0)) |>
+    arrange(pplfair) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_fair <- vapply(pplfair_by_country, function(d) {
+  round(weighted.mean(d$pplfair, w = d$n), 1)
+}, numeric(1))
+
+total_n_fair <- vapply(pplfair_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_fair <- lapply(pplfair_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+pplhlp_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(pplhlp)) |>
+    count(pplhlp) |>
+    complete(pplhlp = 0:10, fill = list(n = 0)) |>
+    arrange(pplhlp) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_help <- vapply(pplhlp_by_country, function(d) {
+  round(weighted.mean(d$pplhlp, w = d$n), 1)
+}, numeric(1))
+
+total_n_help <- vapply(pplhlp_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_help <- lapply(pplhlp_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+trstplt_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(trstplt)) |>
+    count(trstplt) |>
+    complete(trstplt = 0:10, fill = list(n = 0)) |>
+    arrange(trstplt) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_plt <- vapply(trstplt_by_country, function(d) {
+  round(weighted.mean(d$trstplt, w = d$n), 1)
+}, numeric(1))
+
+total_n_plt <- vapply(trstplt_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_plt <- lapply(trstplt_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+trstplc_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(trstplc)) |>
+    count(trstplc) |>
+    complete(trstplc = 0:10, fill = list(n = 0)) |>
+    arrange(trstplc) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_plc <- vapply(trstplc_by_country, function(d) {
+  round(weighted.mean(d$trstplc, w = d$n), 1)
+}, numeric(1))
+
+total_n_plc <- vapply(trstplc_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_plc <- lapply(trstplc_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+trstlgl_by_country <- lapply(groups, function(g) {
+  d <- if (g == "All") data else data |> filter(cntry == g)
+  d |>
+    filter(!is.na(trstlgl)) |>
+    count(trstlgl) |>
+    complete(trstlgl = 0:10, fill = list(n = 0)) |>
+    arrange(trstlgl) |>
+    mutate(percentage = n / sum(n) * 100,
+           percentage_precise = sprintf("%.1f", percentage))
+})
+
+avg_scores_lgl <- vapply(trstlgl_by_country, function(d) {
+  round(weighted.mean(d$trstlgl, w = d$n), 1)
+}, numeric(1))
+
+total_n_lgl <- vapply(trstlgl_by_country, function(d) sum(d$n), numeric(1))
+
+bar_colors_by_country_lgl <- lapply(trstlgl_by_country, function(d) {
+  ifelse(d$percentage == max(d$percentage), ess_red_dark, ess_red)
+})
+
+# ISO-3 codes for the choropleth map (Plotly's most reliable location key)
+country_iso3 <- c(
+  AT = "AUT", BE = "BEL", BG = "BGR", HR = "HRV", CY = "CYP",
+  CZ = "CZE", EE = "EST", FI = "FIN", FR = "FRA", DE = "DEU",
+  GR = "GRC", HU = "HUN", IS = "ISL", IE = "IRL", IL = "ISR",
+  IT = "ITA", LV = "LVA", LT = "LTU", ME = "MNE",
+  NL = "NLD", NO = "NOR", PL = "POL", PT = "PRT", RS = "SRB",
+  SK = "SVK", SI = "SVN", ES = "ESP", SE = "SWE",
+  CH = "CHE", UA = "UKR", GB = "GBR"
+)
+
+# Combined trust score per country: unweighted mean of the six per-country
+combined_avg_by_country <- data.frame(
+  cntry = cntry_codes,
+  cntry_label = cntry_labels,
+  iso3 = unname(country_iso3[cntry_codes]),
+  combined_avg = rowMeans(cbind(
+    avg_scores[-1],
+    avg_scores_fair[-1],
+    avg_scores_help[-1],
+    avg_scores_plt[-1],
+    avg_scores_plc[-1],
+    avg_scores_lgl[-1]
+  ))
+) |>
+  mutate(combined_avg = round(combined_avg, 2))
+
+avg_annotation <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+n_annotation <- function(n) {
+  list(
+    text = paste0("n: <span style='color:#1a1a1a;font-weight:700;'>",
+                  formatC(n, big.mark = " ", format = "d"), "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 0.96, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_fair <- function(avg) {
+  list(
+    text = paste0("Average fairness level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_help <- function(avg) {
+  list(
+    text = paste0("Average helpfulness level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_plt <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_plc <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+avg_annotation_lgl <- function(avg) {
+  list(
+    text = paste0("Average trust level: <span style='color:#1a1a1a;font-weight:700;'>", avg, "</span>"),
+    xref = "paper", x = 1, xanchor = "right",
+    yref = "paper", y = 1.02, yanchor = "top",
+    align = "right",
+    showarrow = FALSE,
+    font = list(family = "Inter, sans-serif", size = 12, color = "#555555")
+  )
+}
+
+# Pre-compute the full per-country trace + annotation data
+
+build_group_data <- function(by_country, avg_scores, total_n, bar_colors, avg_annotation_fn) {
+  lapply(seq_along(groups), function(i) {
+    d <- by_country[[i]]
+    list(
+      x = I(as.character(d[[1]])),
+      y = I(d$percentage),
+      text = I(ifelse(d$n == 0, "", paste0("<b>", d$percentage_precise, "%</b>"))),
+      hovertext = I(paste0("<b>", formatC(d$n, big.mark = " ", format = "d"), "</b> respondents")),
+      marker_color = I(bar_colors[[i]]),
+      annotations = list(avg_annotation_fn(avg_scores[i]), n_annotation(total_n[i]))
+    )
+  })
+}
+
+trust_group_data <- build_group_data(ppltrst_by_country, avg_scores, total_n,
+                                      bar_colors_by_country, avg_annotation)
+fair_group_data <- build_group_data(pplfair_by_country, avg_scores_fair, total_n_fair,
+                                     bar_colors_by_country_fair, avg_annotation_fair)
+help_group_data <- build_group_data(pplhlp_by_country, avg_scores_help, total_n_help,
+                                     bar_colors_by_country_help, avg_annotation_help)
+plt_group_data <- build_group_data(trstplt_by_country, avg_scores_plt, total_n_plt,
+                                    bar_colors_by_country_plt, avg_annotation_plt)
+plc_group_data <- build_group_data(trstplc_by_country, avg_scores_plc, total_n_plc,
+                                    bar_colors_by_country_plc, avg_annotation_plc)
+lgl_group_data <- build_group_data(trstlgl_by_country, avg_scores_lgl, total_n_lgl,
+                                    bar_colors_by_country_lgl, avg_annotation_lgl)
+
+filter_js <- paste0(
+  "window.essTrustData = ", as.character(jsonlite::toJSON(trust_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essFairData = ", as.character(jsonlite::toJSON(fair_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essHelpData = ", as.character(jsonlite::toJSON(help_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essPltData = ", as.character(jsonlite::toJSON(plt_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essPlcData = ", as.character(jsonlite::toJSON(plc_group_data, auto_unbox = TRUE)), ";\n",
+  "window.essLglData = ", as.character(jsonlite::toJSON(lgl_group_data, auto_unbox = TRUE)), ";\n",
+  "
+function essFindGraphDiv(preferredId, positionIndex) {
+  var el = document.getElementById(preferredId);
+  if (el && el.data) return el;
+
+  var all = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot'));
+  var byId = all.find(function (e) { return e.id && e.id.indexOf(preferredId) !== -1; });
+  if (byId) return byId;
+
+  if (all.length > positionIndex) return all[positionIndex];
+  return null;
+}
+
+function essSetNavbarHeightVar() {
+  var navbar = document.querySelector('.navbar');
+  var h = navbar ? navbar.offsetHeight : 72;
+  document.documentElement.style.setProperty('--ess-navbar-height', h + 'px');
+}
+essSetNavbarHeightVar();
+window.addEventListener('resize', essSetNavbarHeightVar);
+window.addEventListener('load', essSetNavbarHeightVar);
+
+var ESS_ANIM_OPTS = {
+  transition: { duration: 500, easing: 'cubic-in-out' },
+  frame: { duration: 500, redraw: false }
+};
+
+function essAnimateBars(el, g) {
+  if (!g || !el) return;
+  Plotly.relayout(el, { annotations: g.annotations });
+  Plotly.animate(el, {
+    data: [{
+      x: g.x, y: g.y, text: g.text, hovertext: g.hovertext,
+      marker: { color: g.marker_color }
+    }],
+    traces: [0]
+  }, ESS_ANIM_OPTS);
+}
+
+window.essUpdateCountry = function (idx) {
+  try {
+    var t = window.essTrustData[idx];
+    var f = window.essFairData[idx];
+    var h = window.essHelpData[idx];
+    var p = window.essPltData[idx];
+    var c = window.essPlcData[idx];
+    var l = window.essLglData[idx];
+    var trustEl = essFindGraphDiv('ppltrst-bar', 0);
+    var fairEl = essFindGraphDiv('pplfair-bar', 1);
+    var helpEl = essFindGraphDiv('pplhlp-bar', 2);
+    var pltEl = essFindGraphDiv('trstplt-bar', 3);
+    var plcEl = essFindGraphDiv('trstplc-bar', 4);
+    var lglEl = essFindGraphDiv('trstlgl-bar', 5);
+    console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null, pltEl ? pltEl.id : null, plcEl ? plcEl.id : null, lglEl ? lglEl.id : null);
+
+    essAnimateBars(trustEl, t);
+    essAnimateBars(fairEl, f);
+    essAnimateBars(helpEl, h);
+    essAnimateBars(pltEl, p);
+    essAnimateBars(plcEl, c);
+    essAnimateBars(lglEl, l);
+  } catch (err) {
+    console.error('ESS country filter update failed:', err);
+  }
+};
+
+function essInitCountryFilter() {
+  var control = document.getElementById('country-filter');
+  if (!control || control.getAttribute('data-ess-init') === '1') return;
+  control.setAttribute('data-ess-init', '1');
+
+  var valueSpan = control.querySelector('.ess-country-filter-value');
+  var menu = control.querySelector('.ess-country-filter-menu');
+  var items = menu ? menu.querySelectorAll('.ess-country-option') : [];
+
+  function closeMenu() {
+    control.classList.remove('open');
+    control.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onDocClick);
+  }
+  function openMenu() {
+    control.classList.add('open');
+    control.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClick);
+  }
+  function onDocClick(e) {
+    if (!control.contains(e.target)) closeMenu();
+  }
+
+  Array.prototype.forEach.call(items, function (li) {
+    li.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var idx = parseInt(li.getAttribute('data-index'), 10);
+      valueSpan.innerHTML = li.innerHTML;
+      Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
+      li.classList.add('active');
+      console.log('[ess-filter] country selected, index', idx);
+      window.essUpdateCountry(idx);
+      closeMenu();
+    });
+  });
+
+  control.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (control.classList.contains('open')) closeMenu(); else openMenu();
+  });
+  control.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (control.classList.contains('open')) closeMenu(); else openMenu();
+    } else if (e.key === 'Escape') {
+      closeMenu();
+    }
+  });
+}
+essInitCountryFilter();
+
+console.log('[ess-filter] country-filter.js loaded OK,', window.essTrustData.length, 'countries available.');
+console.log('[ess-filter] plotly divs on page:', Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot')).map(function (e) { return e.id; }));
+"
+)
+writeLines(filter_js, "country-filter.js")
+```
+
+## {.sidebar}
+
+```{r}
+#| label: country-filter
+#| output: asis
+options_html <- paste0(
+  '<li class="ess-country-option', ifelse(seq_along(groups) == 1, ' active', ''),
+  '" role="option" data-index="', seq_along(groups) - 1, '">',
+  vapply(group_iso2, flag_img_html, character(1)), group_labels, '</li>',
+  collapse = "\n"
+)
+
+cat(paste0(
+  '<div class="ess-filter">',
+  '<label class="ess-filter-label">Country</label>',
+  '<div class="ess-country-filter" id="country-filter" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">',
+  '<span class="ess-country-filter-value">', flag_img_html(group_iso2[1]), group_labels[1], '</span>',
+  '<svg viewBox="0 0 10 6" class="ess-country-filter-caret"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  '<ul class="ess-country-filter-menu" role="listbox">',
+  options_html,
+  '</ul>',
+  '</div>',
+  '</div>',
+  '<script src="country-filter.js"></script>'
+))
+```
+
+## Column
+
+### Row
+
+```{r}
+#| label: ppltrst-bar
+initial <- ppltrst_by_country[[1]]
+
+plot_ly(elementId = "ppltrst-bar") |>
+  add_trace(
+    data = initial,
+    x = ~factor(ppltrst, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Most People Can Be Trusted</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: You can't be too careful, 10: Most people can be trusted)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation(avg_scores[1]), n_annotation(total_n[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row
+
+```{r}
+#| label: pplfair-bar
+initial_fair <- pplfair_by_country[[1]]
+
+plot_ly(elementId = "pplfair-bar") |>
+  add_trace(
+    data = initial_fair,
+    x = ~factor(pplfair, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_fair[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Most People Try to Be Fair</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: Most people try to take advantage of me, 10: Most people try to be fair)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_fair(avg_scores_fair[1]), n_annotation(total_n_fair[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Fairness level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row
+
+```{r}
+#| label: pplhlp-bar
+initial_help <- pplhlp_by_country[[1]]
+
+plot_ly(elementId = "pplhlp-bar") |>
+  add_trace(
+    data = initial_help,
+    x = ~factor(pplhlp, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_help[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Most People Try to Be Helpful</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: People mostly look out for themselves, 10: People mostly try to be helpful)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_help(avg_scores_help[1]), n_annotation(total_n_help[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Helpfulness level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+### Row
+
+```{r}
+#| label: trstplt-bar
+initial_plt <- trstplt_by_country[[1]]
+
+plot_ly(elementId = "trstplt-bar") |>
+  add_trace(
+    data = initial_plt,
+    x = ~factor(trstplt, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_plt[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Trust in Politicians</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: No trust at all, 10: Complete trust)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_plt(avg_scores_plt[1]), n_annotation(total_n_plt[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row
+
+```{r}
+#| label: trstplc-bar
+initial_plc <- trstplc_by_country[[1]]
+
+plot_ly(elementId = "trstplc-bar") |>
+  add_trace(
+    data = initial_plc,
+    x = ~factor(trstplc, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_plc[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Trust in the Police</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: No trust at all, 10: Complete trust)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_plc(avg_scores_plc[1]), n_annotation(total_n_plc[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row
+
+```{r}
+#| label: trstlgl-bar
+initial_lgl <- trstlgl_by_country[[1]]
+
+plot_ly(elementId = "trstlgl-bar") |>
+  add_trace(
+    data = initial_lgl,
+    x = ~factor(trstlgl, levels = 0:10),
+    y = ~percentage,
+    type = "bar",
+    marker = list(color = bar_colors_by_country_lgl[[1]]),
+    text = ~ifelse(n == 0, "", paste0("<b>", percentage_precise, "%</b>")),
+    textposition = "outside",
+    textfont = list(family = "Inter, sans-serif", size = 16, color = "#1a1a1a"),
+    hovertext = ~paste0("<b>", formatC(n, big.mark = " ", format = "d"), "</b> respondents"),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "<b>Trust in the Legal System</b> ",
+        "<span style='color:#666666;font-weight:400;'>(0: No trust at all, 10: Complete trust)</span>"
+      ),
+      font = title_font,
+      x = 0
+    ),
+    annotations = list(avg_annotation_lgl(avg_scores_lgl[1]), n_annotation(total_n_lgl[1])),
+    margin = list(t = 100, pad = 8),
+    showlegend = FALSE,
+    dragmode = FALSE,
+    hovermode = "x",
+    hoverlabel = list(
+      bgcolor = "#6B1B1E",
+      bordercolor = "#6B1B1E",
+      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+    ),
+    xaxis = list(title = list(text = "Trust level (0 - 10)",
+                              font = list(family = "Inter, sans-serif", size = 12, color = "#555555")),
+                 showgrid = FALSE, showline = FALSE, zeroline = FALSE,
+                 type = "category",
+                 categoryorder = "array",
+                 categoryarray = as.character(0:10),
+                 tickmode = "array",
+                 tickvals = as.character(0:10),
+                 ticktext = as.character(0:10),
+                 fixedrange = TRUE,
+                 tickfont = list(family = "Inter, sans-serif", size = 12)),
+    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
+                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
+                 ticksuffix = "%",
+                 range = c(0, 50),
+                 fixedrange = TRUE),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white"
+  ) |>
+  config(displayModeBar = FALSE)
+```
+
+### Row {height="550px"}
+
+```{r}
+#| label: trust-map-highcharts
+#| warning: false
+#| message: false
+
+# Prepare data for Highcharts
+map_data <- combined_avg_by_country |>
+  mutate(
+    name = cntry_label,
+    value = combined_avg,
+    iso2 = tolower(cntry)
+  )
+
+# Create Highcharts map with custom styling
+hcmap(
+  map = "custom/europe",
+  data = map_data,
+  value = "value",
+  joinBy = "name",
+  name = "Combined Trust Score",
+  dataLabels = list(enabled = FALSE)
+) |>
+  hc_title(
+    text = "<b>Combined Average by Country</b> <span style='color:#666666;font-weight:400;'>(average across all six trust measures, 0 - 10)</span>",
+    align = "left",
+    useHTML = TRUE,
+    style = list(
+      fontFamily = "Outfit, sans-serif",
+      fontSize = "14px",
+      color = "#1a1a1a"
+    )
+  ) |>
+  hc_colorAxis(
+    min = min(map_data$value, na.rm = TRUE),
+    max = max(map_data$value, na.rm = TRUE),
+    stops = color_stops(colors = c("#FCE4E4", "#ED3D42", "#6B1B1E")),
+    nullColor = "#f7f7f7"
+  ) |>
+  hc_tooltip(
+    useHTML = TRUE,
+    headerFormat = "",
+    backgroundColor = "transparent",
+    borderWidth = 0,
+    shadow = FALSE,
+    style = list(
+      fontFamily = "Inter, sans-serif",
+      fontSize = "13px"
+    ),
+    formatter = JS("function() {
+      var val = this.point.value;
+      var fillColor = this.point.color || '#f7f7f7';
+
+      function hexToRgb(hex) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) {
+          hex = hex.split('').map(function (c) { return c + c; }).join('');
+        }
+        var num = parseInt(hex, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+      }
+      function darken(hex, factor) {
+        var rgb = hexToRgb(hex);
+        return 'rgb(' + Math.round(rgb.r * factor) + ',' + Math.round(rgb.g * factor) + ',' + Math.round(rgb.b * factor) + ')';
+      }
+
+      var rgb = hexToRgb(fillColor);
+      var brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+      var textColor = brightness > 150 ? '#1a1a1a' : '#ffffff';
+      var borderColor = darken(fillColor, 0.75);
+
+      var flagHtml = '';
+      if (this.point.iso2) {
+        flagHtml = '<img src=\"https://flagcdn.com/24x18/' + this.point.iso2 +
+          '.png\" width=\"20\" height=\"15\" style=\"vertical-align:middle;margin-right:6px;\" ' +
+          'onerror=\"this.style.display=\\'none\\'\" />';
+      }
+
+      var content;
+      if (val === undefined || val === null) {
+        content = flagHtml + '<b>' + this.point.name + '</b><br/>No data';
+      } else {
+        content = flagHtml + '<b>' + this.point.name + '</b><br/>Combined trust: <b>' + val.toFixed(1) + '</b>';
+      }
+
+      return '<div style=\"background-color:' + fillColor + ';border:1px solid ' + borderColor +
+        ';border-radius:3px;padding:6px 10px;color:' + textColor + ';\">' + content + '</div>';
+    }")
+  ) |>
+  hc_plotOptions(
+    series = list(
+      nullInteraction = TRUE, # lets countries with no data (e.g. Denmark) still respond to hover/tooltip
+      borderColor = "#cccccc",
+      borderWidth = 0.5,
+      states = list(
+        hover = list(
+          borderColor = "#1a1a1a",
+          borderWidth = 2
+        )
+      )
+    )
+  ) |>
+  hc_chart(
+    backgroundColor = "white",
+    style = list(
+      fontFamily = "Inter, sans-serif"
+    )
+  ) |>
+  hc_legend(
+    enabled = TRUE,
+    title = list(
+      text = "Trust level<br><span style=\"font-size:7px\">&nbsp;</span>",
+      style = list(fontFamily = "Inter, sans-serif", fontSize = "13px", fontWeight = "600")
+    ),
+    layout = "vertical",
+    align = "right",
+    verticalAlign = "middle",
+    itemStyle = list(
+      fontFamily = "Inter, sans-serif",
+      fontSize = "12px",
+      color = "#555555"
+    )
+  ) |>
+  hc_mapNavigation(
+    enabled = FALSE
+  ) |>
+  hc_exporting(
+    enabled = FALSE
+  ) |>
+  hc_credits(
+    enabled = FALSE
+  )
+```
+
+### Row
+
+```{r}
+#| label: footer
+#| output: asis
+cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+Data: <a href="https://ess.sikt.no/en/" target="_blank" style="color: #555555; text-decoration: underline;">The European Social Survey, Round 11 (2023/24)</a>
+</p>')
+```
