@@ -185,7 +185,7 @@ format:
       - icon: envelope
         href: mailto:teromeh@proton.me
       - icon: house-door
-        href: ../
+        href: /
 ---
 
 ```{r}
