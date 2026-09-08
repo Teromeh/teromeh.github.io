@@ -8,14 +8,14 @@ format:
     scrolling: true
     include-in-header:
       text: |
-        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
       - icon: house-door
-        href: /
+        href: ../
 ---
 
 ```{r}
@@ -75,17 +75,6 @@ cntry_labels <- cntry_labels[name_order]
 
 groups <- c("All", cntry_codes)
 group_labels <- c("All", cntry_labels)
-group_iso2 <- c(NA_character_, tolower(cntry_codes))
-
-flag_img_html <- function(iso2) {
-  if (is.na(iso2)) return("")
-  paste0(
-    '<img src="https://flagcdn.com/24x18/', iso2, '.png" ',
-    'width="16" height="12" alt="" ',
-    'style="vertical-align:middle;margin-right:6px;" ',
-    'onerror="this.style.display=\'none\'" />'
-  )
-}
 
 ppltrst_by_country <- lapply(groups, function(g) {
   d <- if (g == "All") data else data |> filter(cntry == g)
@@ -225,6 +214,9 @@ country_iso3 <- c(
 )
 
 # Combined trust score per country: unweighted mean of the six per-country
+# averages already computed above (ppltrst, pplfair, pplhlp, trstplt, trstplc, trstlgl).
+# avg_scores* are indexed in the same order as groups (c("All", cntry_codes)),
+# so [-1] drops the "All" row and keeps only the per-country values.
 combined_avg_by_country <- data.frame(
   cntry = cntry_codes,
   cntry_label = cntry_labels,
@@ -239,6 +231,8 @@ combined_avg_by_country <- data.frame(
   ))
 ) |>
   mutate(combined_avg = round(combined_avg, 2))
+
+# Annotation helpers
 
 avg_annotation <- function(avg) {
   list(
@@ -447,7 +441,7 @@ function essInitCountryFilter() {
     li.addEventListener('click', function (e) {
       e.stopPropagation();
       var idx = parseInt(li.getAttribute('data-index'), 10);
-      valueSpan.innerHTML = li.innerHTML;
+      valueSpan.textContent = li.textContent;
       Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
       li.classList.add('active');
       console.log('[ess-filter] country selected, index', idx);
@@ -485,8 +479,7 @@ writeLines(filter_js, "country-filter.js")
 #| output: asis
 options_html <- paste0(
   '<li class="ess-country-option', ifelse(seq_along(groups) == 1, ' active', ''),
-  '" role="option" data-index="', seq_along(groups) - 1, '">',
-  vapply(group_iso2, flag_img_html, character(1)), group_labels, '</li>',
+  '" role="option" data-index="', seq_along(groups) - 1, '">', group_labels, '</li>',
   collapse = "\n"
 )
 
@@ -494,7 +487,7 @@ cat(paste0(
   '<div class="ess-filter">',
   '<label class="ess-filter-label">Country</label>',
   '<div class="ess-country-filter" id="country-filter" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">',
-  '<span class="ess-country-filter-value">', flag_img_html(group_iso2[1]), group_labels[1], '</span>',
+  '<span class="ess-country-filter-value">', group_labels[1], '</span>',
   '<svg viewBox="0 0 10 6" class="ess-country-filter-caret"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   '<ul class="ess-country-filter-menu" role="listbox">',
   options_html,

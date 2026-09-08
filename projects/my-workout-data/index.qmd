@@ -1,5 +1,5 @@
 ---
-title: "My workout data"
+title: "Workout data"
 format: 
   dashboard:
     theme:
@@ -8,7 +8,7 @@ format:
     scrolling: true
     include-in-header:
       text: |
-        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
@@ -95,9 +95,11 @@ buttons <- lapply(seq_along(years), function(i) {
         labels = list(I(d$activity_type)),
         values = list(I(d$maara)),
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(d$activity_type, ": ", d$maara, " workouts"))),
+        hovertext = list(I(paste0(d$activity_type, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts"))),
         marker = list(list(colors = I(d$color))),
-        textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color)))
+        textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color))),
+        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$color),
+                                font = list(family = "Inter, sans-serif", size = 13, color = I(d$text_color))))
       ),
       list(
         annotations = list(list(
@@ -122,8 +124,10 @@ plot_ly(
   text = paste0("<b>", initial$percentage, "%</b>"),
   textinfo = "text",
   textfont = list(family = "Inter, sans-serif", size = 16, color = initial$text_color),
-  hovertext = paste0(initial$activity_type, ": ", initial$maara, " workouts"),
-  hoverinfo = "text"
+  hovertext = paste0(initial$activity_type, ": ", format(initial$maara, big.mark = " ", trim = TRUE), " workouts"),
+  hoverinfo = "text",
+  hoverlabel = list(bgcolor = initial$color, bordercolor = initial$color,
+                     font = list(color = initial$text_color, family = "Inter, sans-serif", size = 13))
 ) |>
   layout(
     title = list(text = "<b>Activity Types</b>", font = title_font, x = 0),
@@ -151,11 +155,6 @@ plot_ly(
       font = list(family = "Inter, sans-serif", size = 13),
       title = list(text = "<b>Activity</b>", font = list(family = "Inter, sans-serif", size = 13))
     ),
-    hoverlabel = list(
-      bgcolor = "#2D4A2B",
-      bordercolor = "#2D4A2B",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
@@ -177,9 +176,11 @@ buttons_d <- lapply(seq_along(years), function(i) {
         labels = list(I(d$distance_class)),
         values = list(I(d$maara)),
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(d$distance_class, ": ", d$maara, " workouts"))),
+        hovertext = list(I(paste0(d$distance_class, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts"))),
         marker = list(list(colors = I(d$color))),
-        textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color)))
+        textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color))),
+        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$color),
+                                font = list(family = "Inter, sans-serif", size = 13, color = I(d$text_color))))
       ),
       list(
         annotations = list(list(
@@ -204,8 +205,10 @@ plot_ly(
   text = paste0("<b>", initial_d$percentage, "%</b>"),
   textinfo = "text",
   textfont = list(family = "Inter, sans-serif", size = 16, color = initial_d$text_color),
-  hovertext = paste0(initial_d$distance_class, ": ", initial_d$maara, " workouts"),
-  hoverinfo = "text"
+  hovertext = paste0(initial_d$distance_class, ": ", format(initial_d$maara, big.mark = " ", trim = TRUE), " workouts"),
+  hoverinfo = "text",
+  hoverlabel = list(bgcolor = initial_d$color, bordercolor = initial_d$color,
+                     font = list(color = initial_d$text_color, family = "Inter, sans-serif", size = 13))
 ) |>
   layout(
     title = list(text = "<b>Distance Distribution</b>", font = title_font, x = 0),
@@ -233,11 +236,6 @@ plot_ly(
       font = list(family = "Inter, sans-serif", size = 13),
       title = list(text = "<b>Distance</b>", font = list(family = "Inter, sans-serif", size = 13))
     ),
-    hoverlabel = list(
-      bgcolor = "#2D4A2B",
-      bordercolor = "#2D4A2B",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
@@ -261,8 +259,10 @@ plot_ly() |>
     type = "bar",
     name = "Walk",
     marker = list(color = "#8FAF6B"),
-    hovertext = ~paste0(month_label, " - Walk: ", total_km, " km"),
-    hoverinfo = "text"
+    hovertext = ~paste0(month_label, " - Walk: ", format(total_km, big.mark = " ", trim = TRUE), " km"),
+    hoverinfo = "text",
+    hoverlabel = list(bgcolor = "#8FAF6B", bordercolor = "#8FAF6B",
+                       font = list(color = "#1F3319", family = "Inter, sans-serif", size = 13))
   ) |>
   add_trace(
     data = run_data,
@@ -271,8 +271,10 @@ plot_ly() |>
     type = "bar",
     name = "Run",
     marker = list(color = "#D97E3D"),
-    hovertext = ~paste0(month_label, " - Run: ", total_km, " km"),
-    hoverinfo = "text"
+    hovertext = ~paste0(month_label, " - Run: ", format(total_km, big.mark = " ", trim = TRUE), " km"),
+    hoverinfo = "text",
+    hoverlabel = list(bgcolor = "#D97E3D", bordercolor = "#D97E3D",
+                       font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13))
   ) |>
   layout(
     barmode = "stack",
@@ -280,11 +282,6 @@ plot_ly() |>
     showlegend = TRUE,
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#2D4A2B",
-      bordercolor = "#2D4A2B",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  type = "date",
                  tickformat = "%b %Y",

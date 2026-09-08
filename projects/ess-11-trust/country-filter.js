@@ -97,7 +97,7 @@ function essInitCountryFilter() {
     li.addEventListener('click', function (e) {
       e.stopPropagation();
       var idx = parseInt(li.getAttribute('data-index'), 10);
-      valueSpan.innerHTML = li.innerHTML;
+      valueSpan.textContent = li.textContent;
       Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
       li.classList.add('active');
       console.log('[ess-filter] country selected, index', idx);
