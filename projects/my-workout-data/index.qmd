@@ -29,6 +29,13 @@ data <- readRDS("data/workout_data.rds")
 
 title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#2D4A2B")
 
+darken_hex <- function(hex, factor = 0.7) {
+  rgb_vals <- col2rgb(hex) * factor
+  out <- rgb(rgb_vals[1, ], rgb_vals[2, ], rgb_vals[3, ], maxColorValue = 255)
+  names(out) <- names(hex)
+  out
+}
+
 activity_counts <- data |>
   count(activity_type, name = "maara") |>
   mutate(percentage = round(maara / sum(maara) * 100, 0),
@@ -50,12 +57,14 @@ years <- c("All", sort(unique(format(data$workout_date, "%Y")), decreasing = TRU
 
 activity_colors <- c("Walk" = "#8FAF6B", "Run" = "#D97E3D")
 activity_text_colors <- c("Walk" = "#1F3319", "Run" = "#ffffff")
+activity_border_colors <- darken_hex(activity_colors)
 
 activity_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
   d |> count(activity_type, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
            color = activity_colors[activity_type],
+           border_color = activity_border_colors[activity_type],
            text_color = activity_text_colors[activity_type],
            total = sum(maara))
 })
@@ -64,6 +73,7 @@ distance_colors <- c("0-5 km" = "#D9C89E", "5-10 km" = "#9CAF88",
                       "10-15 km" = "#5C7A4A", "15+ km" = "#2D4A2B")
 distance_text_colors <- c("0-5 km" = "#2D4A2B", "5-10 km" = "#1F3319", 
                            "10-15 km" = "#ffffff", "15+ km" = "#ffffff")
+distance_border_colors <- darken_hex(distance_colors)
 
 distance_by_year <- lapply(years, function(yr) {
   d <- if (yr == "All") data else data |> filter(format(workout_date, "%Y") == yr)
@@ -72,6 +82,7 @@ distance_by_year <- lapply(years, function(yr) {
   d |> count(distance_class, name = "maara") |>
     mutate(percentage = round(maara / sum(maara) * 100, 0),
            color = distance_colors[distance_class],
+           border_color = distance_border_colors[distance_class],
            text_color = distance_text_colors[distance_class],
            total = sum(maara),
            average_distance = average_distance)
@@ -95,10 +106,10 @@ buttons <- lapply(seq_along(years), function(i) {
         labels = list(I(d$activity_type)),
         values = list(I(d$maara)),
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(d$activity_type, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts"))),
+        hovertext = list(I(paste0("<b>", d$activity_type, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts</b>"))),
         marker = list(list(colors = I(d$color))),
         textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color))),
-        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$color),
+        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$border_color),
                                 font = list(family = "Inter, sans-serif", size = 13, color = I(d$text_color))))
       ),
       list(
@@ -124,9 +135,9 @@ plot_ly(
   text = paste0("<b>", initial$percentage, "%</b>"),
   textinfo = "text",
   textfont = list(family = "Inter, sans-serif", size = 16, color = initial$text_color),
-  hovertext = paste0(initial$activity_type, ": ", format(initial$maara, big.mark = " ", trim = TRUE), " workouts"),
+  hovertext = paste0("<b>", initial$activity_type, ": ", format(initial$maara, big.mark = " ", trim = TRUE), " workouts</b>"),
   hoverinfo = "text",
-  hoverlabel = list(bgcolor = initial$color, bordercolor = initial$color,
+  hoverlabel = list(bgcolor = initial$color, bordercolor = initial$border_color,
                      font = list(color = initial$text_color, family = "Inter, sans-serif", size = 13))
 ) |>
   layout(
@@ -176,10 +187,10 @@ buttons_d <- lapply(seq_along(years), function(i) {
         labels = list(I(d$distance_class)),
         values = list(I(d$maara)),
         text = list(I(paste0("<b>", d$percentage, "%</b>"))),
-        hovertext = list(I(paste0(d$distance_class, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts"))),
+        hovertext = list(I(paste0("<b>", d$distance_class, ": ", format(d$maara, big.mark = " ", trim = TRUE), " workouts</b>"))),
         marker = list(list(colors = I(d$color))),
         textfont = list(list(family = "Inter, sans-serif", size = 16, color = I(d$text_color))),
-        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$color),
+        hoverlabel = list(list(bgcolor = I(d$color), bordercolor = I(d$border_color),
                                 font = list(family = "Inter, sans-serif", size = 13, color = I(d$text_color))))
       ),
       list(
@@ -205,9 +216,9 @@ plot_ly(
   text = paste0("<b>", initial_d$percentage, "%</b>"),
   textinfo = "text",
   textfont = list(family = "Inter, sans-serif", size = 16, color = initial_d$text_color),
-  hovertext = paste0(initial_d$distance_class, ": ", format(initial_d$maara, big.mark = " ", trim = TRUE), " workouts"),
+  hovertext = paste0("<b>", initial_d$distance_class, ": ", format(initial_d$maara, big.mark = " ", trim = TRUE), " workouts</b>"),
   hoverinfo = "text",
-  hoverlabel = list(bgcolor = initial_d$color, bordercolor = initial_d$color,
+  hoverlabel = list(bgcolor = initial_d$color, bordercolor = initial_d$border_color,
                      font = list(color = initial_d$text_color, family = "Inter, sans-serif", size = 13))
 ) |>
   layout(
@@ -259,9 +270,9 @@ plot_ly() |>
     type = "bar",
     name = "Walk",
     marker = list(color = "#8FAF6B"),
-    hovertext = ~paste0(month_label, " - Walk: ", format(total_km, big.mark = " ", trim = TRUE), " km"),
+    hovertext = ~paste0("<b>", month_label, " - Walk: ", format(total_km, big.mark = " ", trim = TRUE), " km</b>"),
     hoverinfo = "text",
-    hoverlabel = list(bgcolor = "#8FAF6B", bordercolor = "#8FAF6B",
+    hoverlabel = list(bgcolor = "#8FAF6B", bordercolor = darken_hex("#8FAF6B"),
                        font = list(color = "#1F3319", family = "Inter, sans-serif", size = 13))
   ) |>
   add_trace(
@@ -271,9 +282,9 @@ plot_ly() |>
     type = "bar",
     name = "Run",
     marker = list(color = "#D97E3D"),
-    hovertext = ~paste0(month_label, " - Run: ", format(total_km, big.mark = " ", trim = TRUE), " km"),
+    hovertext = ~paste0("<b>", month_label, " - Run: ", format(total_km, big.mark = " ", trim = TRUE), " km</b>"),
     hoverinfo = "text",
-    hoverlabel = list(bgcolor = "#D97E3D", bordercolor = "#D97E3D",
+    hoverlabel = list(bgcolor = "#D97E3D", bordercolor = darken_hex("#D97E3D"),
                        font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13))
   ) |>
   layout(

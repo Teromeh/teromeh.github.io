@@ -3,8 +3,8 @@ title: "The European Social Survey, round 11 (2023/2024) - Trust"
 format: 
   dashboard:
     theme:
-      light: [litera, ../custom.scss]
-      dark: [darkly, ../custom.scss]
+      light: [litera, ../custom.scss, local.scss]
+      dark: [darkly, ../custom.scss, local.scss]
     scrolling: true
     include-in-header:
       text: |
@@ -75,6 +75,7 @@ cntry_labels <- cntry_labels[name_order]
 
 groups <- c("All", cntry_codes)
 group_labels <- c("All", cntry_labels)
+group_flags <- c(NA, tolower(cntry_codes))
 
 ppltrst_by_country <- lapply(groups, function(g) {
   d <- if (g == "All") data else data |> filter(cntry == g)
@@ -441,7 +442,7 @@ function essInitCountryFilter() {
     li.addEventListener('click', function (e) {
       e.stopPropagation();
       var idx = parseInt(li.getAttribute('data-index'), 10);
-      valueSpan.textContent = li.textContent;
+      valueSpan.innerHTML = li.innerHTML;
       Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
       li.classList.add('active');
       console.log('[ess-filter] country selected, index', idx);
@@ -477,9 +478,16 @@ writeLines(filter_js, "country-filter.js")
 ```{r}
 #| label: country-filter
 #| output: asis
+flag_html <- ifelse(
+  is.na(group_flags),
+  '',
+  paste0('<img class="ess-country-flag" src="https://flagcdn.com/24x18/', group_flags,
+         '.png" width="20" height="15" alt="" onerror="this.style.display=\'none\'" />')
+)
+
 options_html <- paste0(
   '<li class="ess-country-option', ifelse(seq_along(groups) == 1, ' active', ''),
-  '" role="option" data-index="', seq_along(groups) - 1, '">', group_labels, '</li>',
+  '" role="option" data-index="', seq_along(groups) - 1, '">', flag_html, group_labels, '</li>',
   collapse = "\n"
 )
 
@@ -487,7 +495,7 @@ cat(paste0(
   '<div class="ess-filter">',
   '<label class="ess-filter-label">Country</label>',
   '<div class="ess-country-filter" id="country-filter" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false">',
-  '<span class="ess-country-filter-value">', group_labels[1], '</span>',
+  '<span class="ess-country-filter-value">', flag_html[1], group_labels[1], '</span>',
   '<svg viewBox="0 0 10 6" class="ess-country-filter-caret"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   '<ul class="ess-country-filter-menu" role="listbox">',
   options_html,
