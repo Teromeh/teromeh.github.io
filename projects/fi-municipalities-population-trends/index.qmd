@@ -180,6 +180,37 @@ format:
           opacity: 0.5;
           font-weight: 400;
         }
+        .fi-map-wrap {
+          margin-top: 0.9rem;
+        }
+        .fi-map-wrap svg {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .fi-map-muni {
+          fill: rgba(255, 204, 1, 0.6);
+          stroke: #101622;
+          stroke-width: 0.25;
+          stroke-linejoin: round;
+          stroke-linecap: round;
+          shape-rendering: geometricPrecision;
+          fill-rule: evenodd;
+          transition: fill 0.15s ease, stroke 0.15s ease;
+        }
+        .fi-map-muni.active {
+          fill: #101622;
+        }
+        .fi-map-link {
+          pointer-events: none;
+        }
+        .fi-map-link:has(.fi-map-muni.active) {
+          pointer-events: auto;
+          cursor: pointer;
+        }
+        .fi-map-link:has(.fi-map-muni.active):hover .fi-map-muni {
+          fill: #2a3550;
+        }
         </style>
     nav-buttons:
       - icon: envelope
@@ -196,6 +227,8 @@ library(dplyr)
 library(DT)
 library(jsonlite)
 library(stringi)
+library(sf)
+library(geofi)
 
 title_font <- list(family = "Outfit, sans-serif", size = 13, color = "#1a1a1a")
 
@@ -324,6 +357,23 @@ function popUpdateWiki(idx) {
   wrap.style.display = 'block';
 }
 
+function popUpdateMap(idx) {
+  var svg = document.getElementById('fi-map');
+  if (!svg) return;
+
+  var current = svg.querySelector('.fi-map-muni.active');
+  if (current) current.classList.remove('active');
+
+  var name = window.popGroups[idx];
+  if (!name || name === 'All') return;
+
+  var paths = svg.querySelectorAll('.fi-map-muni');
+  var target = Array.prototype.find.call(paths, function (p) {
+    return p.getAttribute('data-name') === name;
+  });
+  if (target) target.classList.add('active');
+}
+
 window.popUpdateMunicipality = function (idx) {
   try {
     var g = window.popData[idx];
@@ -331,6 +381,7 @@ window.popUpdateMunicipality = function (idx) {
     popUpdateLine(el, g);
     popUpdateChange(idx);
     popUpdateWiki(idx);
+    popUpdateMap(idx);
   } catch (err) {
     console.error('Population filter update failed:', err);
   }
@@ -435,6 +486,78 @@ popInitFilter();
 writeLines(filter_js, "population-filter.js")
 ```
 
+```{r}
+#| label: map-prep
+#| include: false
+#| warning: false
+#| message: false
+
+# Municipality boundaries from Statistics Finland (via the geofi package).
+# install.packages(c("geofi", "sf")) if these aren't installed yet.
+# `year` should match the municipality set your population data uses (309
+# municipalities as of 2023-2025); adjust if you see mismatches below.
+muni_sf <- geofi::get_municipalities(year = 2025, scale = 4500) |>
+  sf::st_simplify(dTolerance = 500, preserveTopology = TRUE) |>
+  sf::st_cast("MULTIPOLYGON")
+
+bbox       <- sf::st_bbox(muni_sf)
+map_width  <- 160
+map_scale  <- unname(map_width / (bbox["xmax"] - bbox["xmin"]))
+map_height <- unname((bbox["ymax"] - bbox["ymin"]) * map_scale)
+
+# Convert one (multi)polygon geometry into an SVG <path> "d" string.
+# Handles multiple polygon parts (islands) and holes (e.g. lakes) via
+# fill-rule: evenodd, set in CSS. SVG y grows downward, so y is flipped.
+geom_to_path <- function(geom) {
+  coords <- sf::st_coordinates(sf::st_sfc(geom, crs = sf::st_crs(muni_sf)))
+  parts <- split(as.data.frame(coords), coords[, "L2"])
+  paste(vapply(parts, function(part) {
+    rings <- split(part, part$L1)
+    paste(vapply(rings, function(ring) {
+      x <- (ring$X - bbox["xmin"]) * map_scale
+      y <- map_height - (ring$Y - bbox["ymin"]) * map_scale
+      paste0("M", paste(sprintf("%.1f,%.1f", x, y), collapse = "L"), "Z")
+    }, character(1)), collapse = " ")
+  }, character(1)), collapse = " ")
+}
+
+muni_sf$svg_d <- vapply(sf::st_geometry(muni_sf), geom_to_path, character(1))
+
+# Match map geometries to the municipality names used elsewhere in the
+# dashboard (the `munis` vector from the setup chunk).
+name_lookup   <- setNames(muni_sf$svg_d, muni_sf$name_fi)
+missing_munis <- setdiff(munis, names(name_lookup))
+if (length(missing_munis) > 0) {
+  message("Map: no matching geometry for: ", paste(missing_munis, collapse = ", "))
+}
+
+# Same fi.wikipedia.org URL scheme used for the sidebar Wikipedia link
+muni_wiki_url <- function(name) {
+  paste0("https://fi.wikipedia.org/wiki/", utils::URLencode(gsub(" ", "_", name), reserved = FALSE))
+}
+
+escaped_names <- gsub('"', '&quot;', names(name_lookup), fixed = TRUE)
+map_wiki_urls <- vapply(names(name_lookup), muni_wiki_url, character(1), USE.NAMES = FALSE)
+
+map_paths_html <- paste0(
+  '<a class="fi-map-link" data-name="', escaped_names,
+  '" href="', map_wiki_urls,
+  '" target="_blank" rel="noopener" aria-label="', escaped_names, ' on Wikipedia">',
+  '<path class="fi-map-muni" data-name="', escaped_names, '" d="', name_lookup, '"></path>',
+  '</a>',
+  collapse = "\n"
+)
+
+map_svg_html <- paste0(
+  '<div class="fi-map-wrap">',
+  '<svg id="fi-map" viewBox="0 0 ', round(map_width, 1), ' ', round(map_height, 1),
+  '" xmlns="http://www.w3.org/2000/svg">',
+  map_paths_html,
+  '</svg>',
+  '</div>'
+)
+```
+
 ## {.sidebar width="200px"}
 
 ```{r}
@@ -492,6 +615,7 @@ cat(paste0(
   '<span class="fi-stat-value fi-stat-pct ', init_class, '" id="population-change-pct">', init_pct_str, '</span>',
   '</div>',
   '</div>',
+  map_svg_html,
   '<div class="fi-stats" id="population-wiki" style="display:', init_wiki_display, ';">',
   '<label class="fi-stats-label">Wikipedia</label>',
   '<a href="', init_wiki_url, '" id="population-wiki-link" class="fi-wiki-link" target="_blank" rel="noopener">',
