@@ -262,12 +262,20 @@ line_group_data <- lapply(seq_along(groups), function(i) {
   pad <- (max(d$Count) - min(d$Count)) * 0.1
   if (pad == 0) pad <- max(d$Count) * 0.05
 
+  g <- groups[i]
+  title_text <- if (identical(g, "All")) {
+    "<b>Population Development</b> <span style='color:#666666;font-weight:400;'>(1990 \u2013 2025)</span>"
+  } else {
+    paste0("<b>", g, " Population Development</b> <span style='color:#666666;font-weight:400;'>(1990 \u2013 2025)</span>")
+  }
+
   list(
     x = I(d$Year),
     y = I(d$Count),
     hovertext = I(paste0("<b>", d$Year, "</b><br>Population: <b>",
                           formatC(round(d$Count), big.mark = " ", format = "d"), "</b>")),
-    yrange = I(c(min(d$Count) - pad, max(d$Count) + pad))
+    yrange = I(c(min(d$Count) - pad, max(d$Count) + pad)),
+    title = title_text
   )
 })
 
@@ -310,6 +318,7 @@ function popUpdateLine(el, g) {
   }, {
     'yaxis.range': g.yrange
   }, [0]);
+  Plotly.relayout(el, { 'title.text': g.title });
 }
 
 function popFormatThousands(n) {
@@ -659,7 +668,7 @@ plot_ly(elementId = "population-line") |>
   ) |>
   layout(
     title = list(
-      text = "<b>Population Development</b> <span style='color:#666666;font-weight:400;'>(1990 \u2013 2025)</span>",
+      text = line_group_data[[1]]$title,
       font = title_font,
       x = 0
     ),
