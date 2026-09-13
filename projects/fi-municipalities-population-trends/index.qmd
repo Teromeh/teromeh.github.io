@@ -523,6 +523,12 @@ geom_to_path <- function(geom) {
 
 muni_sf$svg_d <- vapply(sf::st_geometry(muni_sf), geom_to_path, character(1))
 
+# geofi returns Statistics Finland's official bilingual name for this
+# municipality ("Maarianhamina - Mariehamn"); align it with the shortened
+# name used in the population data so the map, filter, and Wikipedia link
+# all agree.
+muni_sf$name_fi[muni_sf$name_fi == "Maarianhamina - Mariehamn"] <- "Maarianhamina"
+
 # Match map geometries to the municipality names used elsewhere in the
 # dashboard (the `munis` vector from the setup chunk).
 name_lookup   <- setNames(muni_sf$svg_d, muni_sf$name_fi)
