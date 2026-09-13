@@ -502,9 +502,6 @@ writeLines(filter_js, "population-filter.js")
 #| message: false
 
 # Municipality boundaries from Statistics Finland (via the geofi package).
-# install.packages(c("geofi", "sf")) if these aren't installed yet.
-# `year` should match the municipality set your population data uses (309
-# municipalities as of 2023-2025); adjust if you see mismatches below.
 muni_sf <- geofi::get_municipalities(year = 2025, scale = 4500) |>
   sf::st_simplify(dTolerance = 500, preserveTopology = TRUE) |>
   sf::st_cast("MULTIPOLYGON")
@@ -515,8 +512,6 @@ map_scale  <- unname(map_width / (bbox["xmax"] - bbox["xmin"]))
 map_height <- unname((bbox["ymax"] - bbox["ymin"]) * map_scale)
 
 # Convert one (multi)polygon geometry into an SVG <path> "d" string.
-# Handles multiple polygon parts (islands) and holes (e.g. lakes) via
-# fill-rule: evenodd, set in CSS. SVG y grows downward, so y is flipped.
 geom_to_path <- function(geom) {
   coords <- sf::st_coordinates(sf::st_sfc(geom, crs = sf::st_crs(muni_sf)))
   parts <- split(as.data.frame(coords), coords[, "L2"])
@@ -531,11 +526,6 @@ geom_to_path <- function(geom) {
 }
 
 muni_sf$svg_d <- vapply(sf::st_geometry(muni_sf), geom_to_path, character(1))
-
-# geofi returns Statistics Finland's official bilingual name for this
-# municipality ("Maarianhamina - Mariehamn"); align it with the shortened
-# name used in the population data so the map, filter, and Wikipedia link
-# all agree.
 muni_sf$name_fi[muni_sf$name_fi == "Maarianhamina - Mariehamn"] <- "Maarianhamina"
 
 # Match map geometries to the municipality names used elsewhere in the

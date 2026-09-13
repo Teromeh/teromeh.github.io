@@ -199,7 +199,7 @@ plot_ly(annual,
   config(displayModeBar = FALSE)
 ```
 
-## Row {height="40px"}
+## Row {height="auto"}
 
 ```{r}
 #| label: footer
