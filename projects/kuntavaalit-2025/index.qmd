@@ -458,7 +458,8 @@ plot_ly(occupation_all,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(gender_tooltip_js)
 ```
 
 ## Row
@@ -509,7 +510,8 @@ plot_ly(occupation_elected,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(gender_tooltip_js)
 ```
 ## Row {height="180px"}
 
@@ -568,6 +570,8 @@ plot_ly() |>
   config(displayModeBar = FALSE) |>
   htmlwidgets::onRender(gender_tooltip_js)
 ```
+
+## Row {height="180px"}
 
 ### Column
 
