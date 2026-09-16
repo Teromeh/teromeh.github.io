@@ -25,6 +25,51 @@ library(plotly)
 library(dplyr)
 library(DT)
 library(jsonlite)
+library(htmlwidgets)
+
+# Custom tooltip that tracks the mouse cursor, used on the gender charts.
+gender_tooltip_js <- r"[
+function(el, x) {
+  var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!isDesktop) return;
+
+  Plotly.restyle(el, {hoverinfo: 'none'});
+
+  var tooltip = document.createElement('div');
+  tooltip.style.position = 'fixed';
+  tooltip.style.pointerEvents = 'none';
+  tooltip.style.background = '#333333';
+  tooltip.style.color = '#ffffff';
+  tooltip.style.fontFamily = 'Inter, sans-serif';
+  tooltip.style.fontSize = '13px';
+  tooltip.style.lineHeight = '1.4';
+  tooltip.style.padding = '6px 10px';
+  tooltip.style.borderRadius = '4px';
+  tooltip.style.zIndex = '9999';
+  tooltip.style.display = 'none';
+  tooltip.style.whiteSpace = 'nowrap';
+  document.body.appendChild(tooltip);
+
+  el.on('plotly_hover', function(data) {
+    var pt = data.points[0];
+    var arr = pt.data.hovertext;
+    var text = Array.isArray(arr) ? arr[pt.pointNumber || 0] : arr;
+    tooltip.innerHTML = text;
+    tooltip.style.display = 'block';
+  });
+
+  el.on('plotly_unhover', function() {
+    tooltip.style.display = 'none';
+  });
+
+  el.addEventListener('mousemove', function(e) {
+    if (tooltip.style.display === 'block') {
+      tooltip.style.left = (e.clientX + 16) + 'px';
+      tooltip.style.top = (e.clientY + 16) + 'px';
+    }
+  });
+}
+]"
 
 data <- readRDS("data/election-data-2025.rds")
 elected <- readRDS("data/elected-2025.rds")
@@ -137,7 +182,7 @@ occupation_all <- data |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
   count(ammatti, name = "maara") |>
   arrange(desc(maara)) |>
-  head(10) |>
+  head(15) |>
   mutate(label = format(maara, big.mark = " ", trim = TRUE))
 
 occupation_elected <- elected |>
@@ -146,7 +191,7 @@ occupation_elected <- elected |>
   distinct(ehdokasnumero, kotikunnan_nimi_suomeksi, ammatti) |>
   count(ammatti, name = "maara") |>
   arrange(desc(maara)) |>
-  head(10) |>
+  head(15) |>
   mutate(label = format(maara, big.mark = " ", trim = TRUE))
 
 avg_age_all <- data |>
@@ -281,7 +326,7 @@ plot_ly(age_all,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#004677"),
+        marker = list(color = "#94A3B8"),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Ehdokkaita: ", maara),
         hoverinfo = "text") |>
@@ -331,7 +376,7 @@ plot_ly(age_elected,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#C0392B"),
+        marker = list(color = "#0D9488"),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Valittuja: ", maara),
         hoverinfo = "text") |>
@@ -376,7 +421,7 @@ plot_ly(occupation_all,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#004677"),
+        marker = list(color = "#94A3B8"),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
         hoverinfo = "text") |>
   layout(
@@ -427,7 +472,7 @@ plot_ly(occupation_elected,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#C0392B"),
+        marker = list(color = "#0D9488"),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " valittua"),
         hoverinfo = "text") |>
   layout(
@@ -479,8 +524,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#3B6E8F"),
-    hoverinfo = "none",
+    marker = list(color = "#4F46E5"),
+    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
+                         format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
+    hoverinfo = "text",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -492,8 +539,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#E8A93D"),
-    hoverinfo = "none",
+    marker = list(color = "#DB2777"),
+    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
+                         format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
+    hoverinfo = "text",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -516,7 +565,8 @@ plot_ly() |>
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(gender_tooltip_js)
 ```
 
 ### Column
@@ -530,8 +580,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#3B6E8F"),
-    hoverinfo = "none",
+    marker = list(color = "#4F46E5"),
+    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
+                         format(maara, big.mark = " ", trim = TRUE), " valittua"),
+    hoverinfo = "text",
     text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -543,8 +595,10 @@ plot_ly() |>
     y = ~"",
     type = "bar",
     orientation = "h",
-    marker = list(color = "#E8A93D"),
-    hoverinfo = "none",
+    marker = list(color = "#DB2777"),
+    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
+                         format(maara, big.mark = " ", trim = TRUE), " valittua"),
+    hoverinfo = "text",
     text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
     textposition = "inside",
     insidetextanchor = "middle",
@@ -567,7 +621,8 @@ plot_ly() |>
     paper_bgcolor = "rgba(0,0,0,0)",
     plot_bgcolor = "rgba(0,0,0,0)"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(gender_tooltip_js)
 ```
 
 ## Row {height="60px"}
