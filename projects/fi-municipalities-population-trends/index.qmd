@@ -275,7 +275,8 @@ line_group_data <- lapply(seq_along(groups), function(i) {
     hovertext = I(paste0("<b>", d$Year, "</b><br>Population: <b>",
                           formatC(round(d$Count), big.mark = " ", format = "d"), "</b>")),
     yrange = I(c(min(d$Count) - pad, max(d$Count) + pad)),
-    title = title_text
+    title = title_text,
+    whole_number = max(d$Count) < 100000
   )
 })
 
@@ -316,7 +317,9 @@ function popUpdateLine(el, g) {
     y: [g.y],
     hovertext: [g.hovertext]
   }, {
-    'yaxis.range': g.yrange
+    'yaxis.range': g.yrange,
+    'yaxis.tickformat': g.whole_number ? ',d' : '',
+    'yaxis.exponentformat': g.whole_number ? 'none' : 'B'
   }, [0]);
   Plotly.relayout(el, { 'title.text': g.title });
 }
@@ -642,6 +645,7 @@ initial <- pop_by_group[[1]]
 initial_hover <- paste0("<b>", initial$Year, "</b><br>Population: <b>",
                          formatC(round(initial$Count), big.mark = " ", format = "d"), "</b>")
 initial_yrange <- unlist(line_group_data[[1]]$yrange)
+initial_whole <- isTRUE(line_group_data[[1]]$whole_number)
 
 plot_ly(elementId = "population-line") |>
   add_trace(
@@ -663,6 +667,7 @@ plot_ly(elementId = "population-line") |>
       x = 0
     ),
     margin = list(t = 60, pad = 8),
+    separators = ". ",
     showlegend = FALSE,
     dragmode = FALSE,
     hovermode = "x",
@@ -680,6 +685,8 @@ plot_ly(elementId = "population-line") |>
     yaxis = list(title = "", showgrid = TRUE, gridcolor = "#eeeeee", showline = FALSE,
                  zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13),
                  range = initial_yrange,
+                 tickformat = if (initial_whole) ",d" else "",
+                 exponentformat = if (initial_whole) "none" else "B",
                  fixedrange = TRUE),
     paper_bgcolor = "white",
     plot_bgcolor = "white"
