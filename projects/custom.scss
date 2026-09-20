@@ -48,6 +48,18 @@ $card-border-radius: 8px;
   margin-top: 1rem;
 }
 
+/* Footer: a single line of text. Drop the card's top margin and vertical
+   padding so it fits inside its fixed-height row without a scrollbar. */
+.quarto-dashboard .card:has(.dashboard-footer) {
+  margin-top: 0;
+}
+
+.quarto-dashboard .card:has(.dashboard-footer) > .card-body {
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+}
+
 /* Match dashboard table titles to Plotly chart titles */
 .quarto-dashboard .card:has(.dataTables_wrapper) > .card-header {
   background: transparent;

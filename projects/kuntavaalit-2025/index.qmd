@@ -27,8 +27,8 @@ library(DT)
 library(jsonlite)
 library(htmlwidgets)
 
-# Custom tooltip that tracks the mouse cursor, used on the gender charts.
-gender_tooltip_js <- r"[
+# Tooltip for hovers
+cursor_tooltip_js <- r"[
 function(el, x) {
   var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (!isDesktop) return;
@@ -89,7 +89,44 @@ party_colors <- c(
   "Muut" = "#000000"
 )
 
+group_colors <- c(all = "#94A3B8", elected = "#0D9488")
+gender_colors <- c(Mies = "#4F46E5", Nainen = "#DB2777")
+
+gender_labels <- c(Mies = "Miehet", Nainen = "Naiset")
+
 title_font <- list(family = "Outfit, sans-serif", size = 14, color = "#1a1a1a")
+
+# Shared chart styling
+transparent <- "rgba(0,0,0,0)"
+
+hoverlabel_style <- list(
+  bgcolor = "#333333",
+  bordercolor = "#333333",
+  font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
+)
+
+label_font <- function(size = 13) {
+  list(color = "#1a1a1a", size = size, family = "Inter, sans-serif")
+}
+
+axis_font <- list(family = "Inter, sans-serif", size = 13)
+
+axis_style <- function(...) {
+  modifyList(
+    list(title = "", showgrid = FALSE, showline = FALSE,
+         zeroline = FALSE, fixedrange = TRUE),
+    list(...)
+  )
+}
+
+category_axis <- function(size = 13) {
+  axis_style(
+    ticklabelposition = "outside",
+    ticklen = 10,
+    tickcolor = transparent,
+    tickfont = label_font(size)
+  )
+}
 
 party_data <- data |>
   group_by(puolueen_ryhman_nimilyhenne_suomeksi) |>
@@ -229,33 +266,12 @@ plot_ly(party_data,
     title = list(text = "<b>Äänijakauma - Puolueet</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      align = "left",
-      font = list(color = "#ffffff", 
-                  family = "Inter, sans-serif",
-                  size = 13)
-    ),
-    xaxis = list(title = "", 
-             range = c(0, max(party_data$percentage) * 1.3),
-             showgrid = FALSE,
-             showline = FALSE,
-             zeroline = FALSE,
-             showticklabels = FALSE, fixedrange = TRUE),
-    yaxis = list(title = "",
-             showgrid = FALSE,
-             showline = FALSE,
-             zeroline = FALSE,
-             ticklabelposition = "outside",
-             ticklen = 10,
-             tickcolor = "rgba(0,0,0,0)",
-             tickfont = list(color = "#1a1a1a", size = 14, 
-                             family = "Inter, sans-serif"),
-             fixedrange = TRUE
-             ),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = modifyList(hoverlabel_style, list(align = "left")),
+    xaxis = axis_style(range = c(0, max(party_data$percentage) * 1.3),
+                       showticklabels = FALSE),
+    yaxis = category_axis(14),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     annotations = lapply(1:nrow(party_data), function(i) {
       list(
         x = party_data$percentage[i],
@@ -264,12 +280,12 @@ plot_ly(party_data,
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
-        font = list(color = "#1a1a1a", size = 13, 
-                    family = "Inter, sans-serif")
+        font = label_font()
       ) 
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Column
@@ -301,16 +317,12 @@ plot_ly(
       visible = FALSE,
       fitbounds = "locations",
       projection = list(type = "mercator"),
-      bgcolor = "rgba(0,0,0,0)"
+      bgcolor = transparent
     ),
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = hoverlabel_style,
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     margin = list(t = 40, b = 0, l = 0, r = 0)
   ) |>
   config(displayModeBar = FALSE)
@@ -326,7 +338,7 @@ plot_ly(age_all,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#94A3B8"),
+        marker = list(color = group_colors[["all"]]),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Ehdokkaita: ", maara),
         hoverinfo = "text") |>
@@ -334,25 +346,11 @@ plot_ly(age_all,
     title = list(text = "<b>Ikäjakauma - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "Ikä", 
-                 showgrid = FALSE, 
-                 zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 13), 
-                 dtick = 10, 
-                 fixedrange = TRUE),
-    yaxis = list(title = "Ehdokkaiden määrä", 
-                 showgrid = FALSE, 
-                 showline = FALSE,
-                 zeroline = FALSE, 
-                 tickfont = list(family = "Inter, sans-serif", size = 13), 
-                 fixedrange = TRUE), 
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(title = "Ikä", tickfont = axis_font, dtick = 10),
+    yaxis = axis_style(title = "Ehdokkaiden määrä", tickfont = axis_font),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     annotations = list(
       list(
         x = max(age_all$ika_vaalipaivana),
@@ -360,8 +358,7 @@ plot_ly(age_all,
         text = paste0("Keskiarvo: <b>", format(avg_age_all, decimal.mark = ","), "</b> vuotta"),
         showarrow = FALSE,
         xanchor = "right",
-        font = list(color = "#1a1a1a", size = 12,
-                    family = "Inter, sans-serif")
+        font = label_font(12)
       )
     )
   ) |>
@@ -376,7 +373,7 @@ plot_ly(age_elected,
         x = ~ika_vaalipaivana,
         y = ~maara,
         type = "bar",
-        marker = list(color = "#0D9488"),
+        marker = list(color = group_colors[["elected"]]),
         hovertext = ~paste0("Ikä: ", ika_vaalipaivana, " vuotta<br>",
                             "Valittuja: ", maara),
         hoverinfo = "text") |>
@@ -384,17 +381,11 @@ plot_ly(age_elected,
     title = list(text = "<b>Ikäjakauma - Valitut ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "Ikä", showgrid = FALSE, zeroline = FALSE,
-                 tickfont = list(family = "Inter, sans-serif", size = 13), dtick = 10, fixedrange = TRUE),
-    yaxis = list(title = "Valittujen määrä", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE, tickfont = list(family = "Inter, sans-serif", size = 13), fixedrange = TRUE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(title = "Ikä", tickfont = axis_font, dtick = 10),
+    yaxis = axis_style(title = "Valittujen määrä", tickfont = axis_font),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     annotations = list(
       list(
         x = max(age_elected$ika_vaalipaivana),
@@ -402,8 +393,7 @@ plot_ly(age_elected,
         text = paste0("Keskiarvo: <b>", format(avg_age_elected, decimal.mark = ","), "</b> vuotta"),
         showarrow = FALSE,
         xanchor = "right",
-        font = list(color = "#1a1a1a", size = 12,
-                    family = "Inter, sans-serif")
+        font = label_font(12)
       )
     )
   ) |>
@@ -421,30 +411,18 @@ plot_ly(occupation_all,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#94A3B8"),
+        marker = list(color = group_colors[["all"]]),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Kaikki ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showline = FALSE, showticklabels = FALSE, fixedrange = TRUE),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE,
-                 ticklabelposition = "outside",
-                 ticklen = 10,
-                 tickcolor = "rgba(0,0,0,0)",
-                 tickfont = list(color = "#1a1a1a", size = 13,
-                                 family = "Inter, sans-serif"),
-                 fixedrange = TRUE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(showticklabels = FALSE),
+    yaxis = category_axis(),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     annotations = lapply(1:nrow(occupation_all), function(i) {
       list(
         x = occupation_all$maara[i],
@@ -453,13 +431,12 @@ plot_ly(occupation_all,
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
-        font = list(color = "#1a1a1a", size = 13,
-                    family = "Inter, sans-serif")
+        font = label_font()
       )
     })
   ) |>
   config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(gender_tooltip_js)
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ## Row
@@ -473,30 +450,18 @@ plot_ly(occupation_elected,
         y = ~reorder(ammatti, maara),
         type = "bar",
         orientation = "h",
-        marker = list(color = "#0D9488"),
+        marker = list(color = group_colors[["elected"]]),
         hovertext = ~paste0(ammatti, ": ", format(maara, big.mark = " ", trim = TRUE), " valittua"),
         hoverinfo = "text") |>
   layout(
     title = list(text = "<b>Yleisimmät ammatit - Valitut ehdokkaat</b>", font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showline = FALSE, showticklabels = FALSE, fixedrange = TRUE),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE,
-                 zeroline = FALSE,
-                 ticklabelposition = "outside",
-                 ticklen = 10,
-                 tickcolor = "rgba(0,0,0,0)",
-                 tickfont = list(color = "#1a1a1a", size = 13,
-                                 family = "Inter, sans-serif"),
-                 fixedrange = TRUE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(showticklabels = FALSE),
+    yaxis = category_axis(),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent,
     annotations = lapply(1:nrow(occupation_elected), function(i) {
       list(
         x = occupation_elected$maara[i],
@@ -505,13 +470,12 @@ plot_ly(occupation_elected,
         showarrow = FALSE,
         xanchor = "left",
         xshift = 5,
-        font = list(color = "#1a1a1a", size = 13,
-                    family = "Inter, sans-serif")
+        font = label_font()
       )
     })
   ) |>
   config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(gender_tooltip_js)
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 ## Row {height="180px"}
 
@@ -519,56 +483,36 @@ plot_ly(occupation_elected,
 
 ```{r}
 #| label: gender-all
-plot_ly() |>
-  add_trace(
-    data = gender_all |> filter(sukupuoli == "Mies"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#4F46E5"),
-    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
-                         format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
-    hoverinfo = "text",
-    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  add_trace(
-    data = gender_all |> filter(sukupuoli == "Nainen"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#DB2777"),
-    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
-                         format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
-    hoverinfo = "text",
-    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
+plot_ly(gender_all |> filter(sukupuoli %in% names(gender_colors)),
+        x = ~percentage,
+        y = ~"",
+        type = "bar",
+        orientation = "h",
+        color = ~sukupuoli,
+        colors = gender_colors,
+        hovertext = ~paste0(gender_labels[sukupuoli], ": ",
+                            format(round(percentage, 1), decimal.mark = ",", trim = TRUE), " %<br>",
+                            format(maara, big.mark = " ", trim = TRUE), " ehdokasta"),
+        hoverinfo = "text",
+        text = ~paste0("<b>", gender_labels[sukupuoli], ": ",
+                       format(round(percentage, 1), decimal.mark = ",", trim = TRUE), " %</b>"),
+        textposition = "inside",
+        insidetextanchor = "middle",
+        insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)) |>
   layout(
     barmode = "stack",
     title = list(text = "<b>Sukupuolijakauma - Kaikki ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100), fixedrange = TRUE),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE, fixedrange = TRUE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)"
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(showticklabels = FALSE, range = c(0, 100)),
+    yaxis = axis_style(),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent
   ) |>
   config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(gender_tooltip_js)
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ## Row {height="180px"}
@@ -577,56 +521,36 @@ plot_ly() |>
 
 ```{r}
 #| label: gender-elected
-plot_ly() |>
-  add_trace(
-    data = gender_elected |> filter(sukupuoli == "Mies"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#4F46E5"),
-    hovertext = ~paste0("Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
-                         format(maara, big.mark = " ", trim = TRUE), " valittua"),
-    hoverinfo = "text",
-    text = ~paste0("<b>Miehet: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
-  add_trace(
-    data = gender_elected |> filter(sukupuoli == "Nainen"),
-    x = ~percentage,
-    y = ~"",
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#DB2777"),
-    hovertext = ~paste0("Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %<br>",
-                         format(maara, big.mark = " ", trim = TRUE), " valittua"),
-    hoverinfo = "text",
-    text = ~paste0("<b>Naiset: ", format(round(percentage, 1), decimal.mark = ","), " %</b>"),
-    textposition = "inside",
-    insidetextanchor = "middle",
-    insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)
-  ) |>
+plot_ly(gender_elected |> filter(sukupuoli %in% names(gender_colors)),
+        x = ~percentage,
+        y = ~"",
+        type = "bar",
+        orientation = "h",
+        color = ~sukupuoli,
+        colors = gender_colors,
+        hovertext = ~paste0(gender_labels[sukupuoli], ": ",
+                            format(round(percentage, 1), decimal.mark = ",", trim = TRUE), " %<br>",
+                            format(maara, big.mark = " ", trim = TRUE), " valittua"),
+        hoverinfo = "text",
+        text = ~paste0("<b>", gender_labels[sukupuoli], ": ",
+                       format(round(percentage, 1), decimal.mark = ",", trim = TRUE), " %</b>"),
+        textposition = "inside",
+        insidetextanchor = "middle",
+        insidetextfont = list(color = "white", family = "Inter, sans-serif", size = 13)) |>
   layout(
     barmode = "stack",
     title = list(text = "<b>Sukupuolijakauma - Valitut ehdokkaat</b>",
                  font = title_font, x = 0),
     showlegend = FALSE,
     dragmode = FALSE,
-    hoverlabel = list(
-      bgcolor = "#333333",
-      bordercolor = "#333333",
-      font = list(color = "#ffffff", family = "Inter, sans-serif", size = 13)
-    ),
-    xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
-                 showticklabels = FALSE, range = c(0, 100), fixedrange = TRUE),
-    yaxis = list(title = "", showgrid = FALSE, showline = FALSE, zeroline = FALSE, fixedrange = TRUE),
-    paper_bgcolor = "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)"
+    hoverlabel = hoverlabel_style,
+    xaxis = axis_style(showticklabels = FALSE, range = c(0, 100)),
+    yaxis = axis_style(),
+    paper_bgcolor = transparent,
+    plot_bgcolor = transparent
   ) |>
   config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(gender_tooltip_js)
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ## Row {height="60px"}
@@ -635,7 +559,7 @@ plot_ly() |>
 #| label: footer
 #| output: asis
 #| expandable: false
-cat('<p style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; padding: 0.5rem 1rem;">
+cat('<p class="dashboard-footer" style="font-size: 12px; color: #555555; font-family: Inter, sans-serif; text-align: right; margin: 0; padding: 0 1rem;">
 Data: <a href="https://tulospalvelu.vaalit.fi/fi/index.html" target="_blank" style="color: #555555; text-decoration: underline;">Oikeusministeriö, Tieto- ja tulospalvelu</a> ·
 Kuntarajat: <a href="https://asiointi.maanmittauslaitos.fi/karttapaikka/tiedostopalvelu?lang=fi" target="_blank" style="color: #555555; text-decoration: underline;">Maanmittauslaitos</a>
 </p>')
