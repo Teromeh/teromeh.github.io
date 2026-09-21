@@ -31,6 +31,67 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(htmltools)
+library(htmlwidgets)
+
+# Tooltip that follows the cursor smoothly (replaces Plotly's own hover label on desktop).
+# Same look as the previous hoverlabel: white text on the dashboard red.
+cursor_tooltip_js <- r"[
+function(el, x) {
+  var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (!isDesktop) return;
+
+  // hoverinfo 'none' hides Plotly's label but plotly_hover / plotly_unhover still fire.
+  Plotly.restyle(el, {hoverinfo: 'none'});
+
+  var tooltip = document.createElement('div');
+  tooltip.style.position = 'fixed';
+  tooltip.style.pointerEvents = 'none';
+  tooltip.style.background = '#6B1B1E';
+  tooltip.style.color = '#ffffff';
+  tooltip.style.fontFamily = 'Inter, sans-serif';
+  tooltip.style.fontSize = '13px';
+  tooltip.style.lineHeight = '1.4';
+  tooltip.style.padding = '6px 10px';
+  tooltip.style.borderRadius = '4px';
+  tooltip.style.zIndex = '9999';
+  tooltip.style.display = 'none';
+  tooltip.style.whiteSpace = 'nowrap';
+  document.body.appendChild(tooltip);
+
+  var mouseX = 0, mouseY = 0;
+
+  // Sit 16px below-right of the cursor; flip to the other side near the window edge.
+  function place() {
+    var gap = 16, margin = 8;
+    var w = tooltip.offsetWidth, h = tooltip.offsetHeight;
+    var left = mouseX + gap, top = mouseY + gap;
+    if (left + w > window.innerWidth - margin) left = mouseX - w - gap;
+    if (top + h > window.innerHeight - margin) top = mouseY - h - gap;
+    tooltip.style.left = Math.max(margin, left) + 'px';
+    tooltip.style.top = Math.max(margin, top) + 'px';
+  }
+
+  el.on('plotly_hover', function(data) {
+    var pt = data.points[0];
+    var arr = (pt.fullData && pt.fullData.hovertext) || pt.data.hovertext;
+    var text = Array.isArray(arr) ? arr[pt.pointNumber || 0] : arr;
+    if (!text) return;
+    tooltip.innerHTML = text;
+    tooltip.style.display = 'block';
+    place();
+  });
+
+  el.on('plotly_unhover', function() {
+    tooltip.style.display = 'none';
+  });
+
+  el.addEventListener('mousemove', function(e) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if (tooltip.style.display === 'block') place();
+  });
+}
+]"
 
 #   agea     - age of respondent (numeric)
 #   ppltrst  - most people can be trusted (0-10)
@@ -376,9 +437,48 @@ var ESS_ANIM_OPTS = {
   frame: { duration: 500, redraw: false }
 };
 
-function essAnimateBars(el, g) {
+var ESS_FLAG_W = 20;
+var ESS_FLAG_H = 15;
+var ESS_FLAG_GAP = 8;
+
+// Draws the selected country's flag just left of the chart title. Plotly titles are
+// SVG text and cannot hold an image, so the flag is an absolutely positioned img
+// placed at the measured title position (the title is shifted right to make room).
+function essPlaceTitleFlag(el) {
+  var host = el.querySelector('.svg-container') || el;
+  var img = host.querySelector('.ess-title-flag');
+  var src = el._essFlagSrc;
+  if (!src) { if (img) host.removeChild(img); return; }
+  var title = el.querySelector('.gtitle');
+  if (!title) return;
+  var hr = host.getBoundingClientRect();
+  var tr = title.getBoundingClientRect();
+  if (!img) {
+    img = document.createElement('img');
+    img.className = 'ess-title-flag';
+    img.alt = '';
+    img.style.cssText = 'position:absolute;pointer-events:none;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.15);width:' + ESS_FLAG_W + 'px;height:' + ESS_FLAG_H + 'px;';
+    host.appendChild(img);
+  }
+  if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+  img.style.left = Math.round(tr.left - hr.left - ESS_FLAG_W - ESS_FLAG_GAP) + 'px';
+  img.style.top = Math.round(tr.top - hr.top + (tr.height - ESS_FLAG_H) / 2) + 'px';
+}
+
+// Keep the flag glued to the title when the chart is redrawn or resized.
+function essBindTitleFlag(el) {
+  if (el._essFlagBound || !el.on) return;
+  el._essFlagBound = true;
+  el.on('plotly_afterplot', function () { essPlaceTitleFlag(el); });
+}
+
+function essAnimateBars(el, g, flagSrc) {
   if (!g || !el) return;
-  Plotly.relayout(el, { annotations: g.annotations });
+  el._essFlagSrc = flagSrc || null;
+  essBindTitleFlag(el);
+  var padLeft = flagSrc ? (ESS_FLAG_W + ESS_FLAG_GAP) : 0;
+  Plotly.relayout(el, { annotations: g.annotations, 'title.xanchor': 'left', 'title.pad.l': padLeft })
+    .then(function () { essPlaceTitleFlag(el); });
   Plotly.animate(el, {
     data: [{
       x: g.x, y: g.y, text: g.text, hovertext: g.hovertext,
@@ -388,7 +488,7 @@ function essAnimateBars(el, g) {
   }, ESS_ANIM_OPTS);
 }
 
-window.essUpdateCountry = function (idx) {
+window.essUpdateCountry = function (idx, flagSrc) {
   try {
     var t = window.essTrustData[idx];
     var f = window.essFairData[idx];
@@ -404,12 +504,12 @@ window.essUpdateCountry = function (idx) {
     var lglEl = essFindGraphDiv('trstlgl-bar', 5);
     console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null, pltEl ? pltEl.id : null, plcEl ? plcEl.id : null, lglEl ? lglEl.id : null);
 
-    essAnimateBars(trustEl, t);
-    essAnimateBars(fairEl, f);
-    essAnimateBars(helpEl, h);
-    essAnimateBars(pltEl, p);
-    essAnimateBars(plcEl, c);
-    essAnimateBars(lglEl, l);
+    essAnimateBars(trustEl, t, flagSrc);
+    essAnimateBars(fairEl, f, flagSrc);
+    essAnimateBars(helpEl, h, flagSrc);
+    essAnimateBars(pltEl, p, flagSrc);
+    essAnimateBars(plcEl, c, flagSrc);
+    essAnimateBars(lglEl, l, flagSrc);
   } catch (err) {
     console.error('ESS country filter update failed:', err);
   }
@@ -446,7 +546,8 @@ function essInitCountryFilter() {
       Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
       li.classList.add('active');
       console.log('[ess-filter] country selected, index', idx);
-      window.essUpdateCountry(idx);
+      var flagImg = li.querySelector('img');
+      window.essUpdateCountry(idx, flagImg ? flagImg.getAttribute('src') : null);
       closeMenu();
     });
   });
@@ -481,8 +582,8 @@ writeLines(filter_js, "country-filter.js")
 flag_html <- ifelse(
   is.na(group_flags),
   '',
-  paste0('<img class="ess-country-flag" src="https://flagcdn.com/24x18/', group_flags,
-         '.png" width="20" height="15" alt="" onerror="this.style.display=\'none\'" />')
+  paste0('<img class="ess-country-flag" src="flags/', group_flags,
+         '.svg" width="20" height="15" alt="" onerror="this.style.display=\'none\'" />')
 )
 
 options_html <- paste0(
@@ -565,7 +666,8 @@ plot_ly(elementId = "ppltrst-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Row
@@ -625,7 +727,8 @@ plot_ly(elementId = "pplfair-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Row
@@ -685,7 +788,8 @@ plot_ly(elementId = "pplhlp-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 ### Row
 
@@ -744,7 +848,8 @@ plot_ly(elementId = "trstplt-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Row
@@ -804,7 +909,8 @@ plot_ly(elementId = "trstplc-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Row
@@ -864,7 +970,8 @@ plot_ly(elementId = "trstlgl-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(cursor_tooltip_js)
 ```
 
 ### Row {height="550px"}
@@ -941,8 +1048,8 @@ hcmap(
 
       var flagHtml = '';
       if (this.point.iso2) {
-        flagHtml = '<img src=\"https://flagcdn.com/24x18/' + this.point.iso2 +
-          '.png\" width=\"20\" height=\"15\" style=\"vertical-align:middle;margin-right:6px;\" ' +
+        flagHtml = '<img src=\"./flags/' + this.point.iso2 +
+          '.svg\" width=\"20\" height=\"15\" style=\"vertical-align:middle;margin-right:6px;\" ' +
           'onerror=\"this.style.display=\\'none\\'\" />';
       }
 

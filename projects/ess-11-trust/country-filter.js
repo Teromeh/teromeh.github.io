@@ -31,9 +31,48 @@ var ESS_ANIM_OPTS = {
   frame: { duration: 500, redraw: false }
 };
 
-function essAnimateBars(el, g) {
+var ESS_FLAG_W = 20;
+var ESS_FLAG_H = 15;
+var ESS_FLAG_GAP = 8;
+
+// Draws the selected country's flag just left of the chart title. Plotly titles are
+// SVG text and cannot hold an image, so the flag is an absolutely positioned img
+// placed at the measured title position (the title is shifted right to make room).
+function essPlaceTitleFlag(el) {
+  var host = el.querySelector('.svg-container') || el;
+  var img = host.querySelector('.ess-title-flag');
+  var src = el._essFlagSrc;
+  if (!src) { if (img) host.removeChild(img); return; }
+  var title = el.querySelector('.gtitle');
+  if (!title) return;
+  var hr = host.getBoundingClientRect();
+  var tr = title.getBoundingClientRect();
+  if (!img) {
+    img = document.createElement('img');
+    img.className = 'ess-title-flag';
+    img.alt = '';
+    img.style.cssText = 'position:absolute;pointer-events:none;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,0.15);width:' + ESS_FLAG_W + 'px;height:' + ESS_FLAG_H + 'px;';
+    host.appendChild(img);
+  }
+  if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+  img.style.left = Math.round(tr.left - hr.left - ESS_FLAG_W - ESS_FLAG_GAP) + 'px';
+  img.style.top = Math.round(tr.top - hr.top + (tr.height - ESS_FLAG_H) / 2) + 'px';
+}
+
+// Keep the flag glued to the title when the chart is redrawn or resized.
+function essBindTitleFlag(el) {
+  if (el._essFlagBound || !el.on) return;
+  el._essFlagBound = true;
+  el.on('plotly_afterplot', function () { essPlaceTitleFlag(el); });
+}
+
+function essAnimateBars(el, g, flagSrc) {
   if (!g || !el) return;
-  Plotly.relayout(el, { annotations: g.annotations });
+  el._essFlagSrc = flagSrc || null;
+  essBindTitleFlag(el);
+  var padLeft = flagSrc ? (ESS_FLAG_W + ESS_FLAG_GAP) : 0;
+  Plotly.relayout(el, { annotations: g.annotations, 'title.xanchor': 'left', 'title.pad.l': padLeft })
+    .then(function () { essPlaceTitleFlag(el); });
   Plotly.animate(el, {
     data: [{
       x: g.x, y: g.y, text: g.text, hovertext: g.hovertext,
@@ -43,7 +82,7 @@ function essAnimateBars(el, g) {
   }, ESS_ANIM_OPTS);
 }
 
-window.essUpdateCountry = function (idx) {
+window.essUpdateCountry = function (idx, flagSrc) {
   try {
     var t = window.essTrustData[idx];
     var f = window.essFairData[idx];
@@ -59,12 +98,12 @@ window.essUpdateCountry = function (idx) {
     var lglEl = essFindGraphDiv('trstlgl-bar', 5);
     console.log('[ess-filter] resolved elements:', trustEl ? trustEl.id : null, fairEl ? fairEl.id : null, helpEl ? helpEl.id : null, pltEl ? pltEl.id : null, plcEl ? plcEl.id : null, lglEl ? lglEl.id : null);
 
-    essAnimateBars(trustEl, t);
-    essAnimateBars(fairEl, f);
-    essAnimateBars(helpEl, h);
-    essAnimateBars(pltEl, p);
-    essAnimateBars(plcEl, c);
-    essAnimateBars(lglEl, l);
+    essAnimateBars(trustEl, t, flagSrc);
+    essAnimateBars(fairEl, f, flagSrc);
+    essAnimateBars(helpEl, h, flagSrc);
+    essAnimateBars(pltEl, p, flagSrc);
+    essAnimateBars(plcEl, c, flagSrc);
+    essAnimateBars(lglEl, l, flagSrc);
   } catch (err) {
     console.error('ESS country filter update failed:', err);
   }
@@ -101,7 +140,8 @@ function essInitCountryFilter() {
       Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
       li.classList.add('active');
       console.log('[ess-filter] country selected, index', idx);
-      window.essUpdateCountry(idx);
+      var flagImg = li.querySelector('img');
+      window.essUpdateCountry(idx, flagImg ? flagImg.getAttribute('src') : null);
       closeMenu();
     });
   });
