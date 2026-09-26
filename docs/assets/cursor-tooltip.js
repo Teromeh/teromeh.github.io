@@ -28,10 +28,17 @@
     if (el.dataset.cursorTooltip) return; // already wired up
     el.dataset.cursorTooltip = 'true';
 
+    // "closest" is what makes touch-only hover work for bars (the cursor has to
+    // actually be over the bar shape, not just anywhere in its category band).
+    // For other trace types - e.g. a filled line chart using hovermode "x" so the
+    // whole shaded area under the curve responds to hover - leave the author's
+    // own choice alone.
+    var hasBar = (el.data || []).some(function (trace) { return trace.type === 'bar'; });
+    var layoutUpdate = hasBar ? { hovermode: 'closest' } : {};
+
     // hoverinfo 'none' hides Plotly's own label but plotly_hover/plotly_unhover
-    // still fire. hovermode 'closest' makes those events fire only when the
-    // cursor is actually over a data point, not anywhere in its category band.
-    Plotly.update(el, { hoverinfo: 'none' }, { hovermode: 'closest' });
+    // still fire.
+    Plotly.update(el, { hoverinfo: 'none' }, layoutUpdate);
 
     var tooltip = document.createElement('div');
     tooltip.style.position = 'fixed';

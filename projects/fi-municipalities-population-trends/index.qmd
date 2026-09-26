@@ -11,6 +11,7 @@ format:
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+        <script src="/assets/cursor-tooltip.js" defer></script>
         <style>
         .fi-filter {
           margin-bottom: 1rem;
@@ -670,7 +671,7 @@ plot_ly(elementId = "population-line") |>
     separators = ". ",
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = fi_dark,
       bordercolor = fi_dark,
