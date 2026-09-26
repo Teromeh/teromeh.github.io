@@ -6,11 +6,6 @@ format:
       light: [litera, ../custom.scss]
       dark: [darkly, ../custom.scss]
     scrolling: true
-    include-in-header:
-      text: |
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -293,6 +288,7 @@ plot_ly() |>
     showlegend = TRUE,
     legend = list(font = list(family = "Inter, sans-serif", size = 13)),
     dragmode = FALSE,
+    hovermode = "closest",
     xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE,
                  type = "date",
                  tickformat = "%b %Y",

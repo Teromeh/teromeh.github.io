@@ -6,11 +6,6 @@ format:
       light: [litera, ../custom.scss, local.scss]
       dark: [darkly, ../custom.scss, local.scss]
     scrolling: true
-    include-in-header:
-      text: |
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -32,66 +27,6 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(htmltools)
 library(htmlwidgets)
-
-# Tooltip that follows the cursor smoothly (replaces Plotly's own hover label on desktop).
-# Same look as the previous hoverlabel: white text on the dashboard red.
-cursor_tooltip_js <- r"[
-function(el, x) {
-  var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if (!isDesktop) return;
-
-  // hoverinfo 'none' hides Plotly's label but plotly_hover / plotly_unhover still fire.
-  Plotly.restyle(el, {hoverinfo: 'none'});
-
-  var tooltip = document.createElement('div');
-  tooltip.style.position = 'fixed';
-  tooltip.style.pointerEvents = 'none';
-  tooltip.style.background = '#6B1B1E';
-  tooltip.style.color = '#ffffff';
-  tooltip.style.fontFamily = 'Inter, sans-serif';
-  tooltip.style.fontSize = '13px';
-  tooltip.style.lineHeight = '1.4';
-  tooltip.style.padding = '6px 10px';
-  tooltip.style.borderRadius = '4px';
-  tooltip.style.zIndex = '9999';
-  tooltip.style.display = 'none';
-  tooltip.style.whiteSpace = 'nowrap';
-  document.body.appendChild(tooltip);
-
-  var mouseX = 0, mouseY = 0;
-
-  // Sit 16px below-right of the cursor; flip to the other side near the window edge.
-  function place() {
-    var gap = 16, margin = 8;
-    var w = tooltip.offsetWidth, h = tooltip.offsetHeight;
-    var left = mouseX + gap, top = mouseY + gap;
-    if (left + w > window.innerWidth - margin) left = mouseX - w - gap;
-    if (top + h > window.innerHeight - margin) top = mouseY - h - gap;
-    tooltip.style.left = Math.max(margin, left) + 'px';
-    tooltip.style.top = Math.max(margin, top) + 'px';
-  }
-
-  el.on('plotly_hover', function(data) {
-    var pt = data.points[0];
-    var arr = (pt.fullData && pt.fullData.hovertext) || pt.data.hovertext;
-    var text = Array.isArray(arr) ? arr[pt.pointNumber || 0] : arr;
-    if (!text) return;
-    tooltip.innerHTML = text;
-    tooltip.style.display = 'block';
-    place();
-  });
-
-  el.on('plotly_unhover', function() {
-    tooltip.style.display = 'none';
-  });
-
-  el.addEventListener('mousemove', function(e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    if (tooltip.style.display === 'block') place();
-  });
-}
-]"
 
 #   agea     - age of respondent (numeric)
 #   ppltrst  - most people can be trusted (0-10)
@@ -641,7 +576,7 @@ plot_ly(elementId = "ppltrst-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -666,8 +601,7 @@ plot_ly(elementId = "ppltrst-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Row
@@ -702,7 +636,7 @@ plot_ly(elementId = "pplfair-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -727,8 +661,7 @@ plot_ly(elementId = "pplfair-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Row
@@ -763,7 +696,7 @@ plot_ly(elementId = "pplhlp-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -788,8 +721,7 @@ plot_ly(elementId = "pplhlp-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 ### Row
 
@@ -823,7 +755,7 @@ plot_ly(elementId = "trstplt-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -848,8 +780,7 @@ plot_ly(elementId = "trstplt-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Row
@@ -884,7 +815,7 @@ plot_ly(elementId = "trstplc-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -909,8 +840,7 @@ plot_ly(elementId = "trstplc-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Row
@@ -945,7 +875,7 @@ plot_ly(elementId = "trstlgl-bar") |>
     margin = list(t = 100, pad = 8),
     showlegend = FALSE,
     dragmode = FALSE,
-    hovermode = "x",
+    hovermode = "closest",
     hoverlabel = list(
       bgcolor = "#6B1B1E",
       bordercolor = "#6B1B1E",
@@ -970,8 +900,7 @@ plot_ly(elementId = "trstlgl-bar") |>
     paper_bgcolor = "white",
     plot_bgcolor = "white"
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Row {height="550px"}
@@ -1066,7 +995,7 @@ hcmap(
   ) |>
   hc_plotOptions(
     series = list(
-      nullInteraction = TRUE, # lets countries with no data (e.g. Denmark) still respond to hover/tooltip
+      nullInteraction = TRUE, # countries with no data
       borderColor = "#cccccc",
       borderWidth = 0.5,
       states = list(
