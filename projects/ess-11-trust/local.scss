@@ -10,3 +10,10 @@
 .quarto-dashboard .card:has(#trust-map) .card-body {
   padding: 0.75rem 1rem 1rem;
 }
+
+/* custom.scss gives only the first card in a row a 1rem top margin, which pushes
+   the left chart of each pair down. Give the other cards in a row the same margin
+   so side-by-side charts line up. */
+.quarto-dashboard .card:not(:first-child) {
+  margin-top: 1rem;
+}
