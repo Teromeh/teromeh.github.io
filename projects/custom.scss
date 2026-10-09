@@ -69,6 +69,21 @@ $card-border-radius: 8px;
   font-size: 13px;
   font-weight: 700;
   padding: 0 1rem 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dataTables_wrapper,
+table.dataTable {
+  font-size: 12px;
+  font-family: Inter, sans-serif;
+}
+
+.dataTables_info,
+.dataTables_paginate {
+  font-size: 11px;
 }
 
 .quarto-dashboard .card:has(.dataTables_wrapper) .dataTables_scrollHead th:last-child,
@@ -191,3 +206,45 @@ $card-border-radius: 8px;
   border-radius: 2px;
 }
 
+
+/* Year dropdown (assets/year-filter.js) */
+select.year-select {
+  min-width: 5rem;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* On donut charts: floats in the top-right corner of the plot */
+select.year-select.year-select-float {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  z-index: 15;
+  height: 30px;
+  padding: 0 0.6rem;
+}
+
+/* In table card headers: "Year" label + select, pushed right by the header's flex layout */
+.year-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.year-select-wrap label {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.year-select-wrap select.year-select {
+  min-width: 4.5rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 11px;
+}

@@ -12,6 +12,7 @@ format:
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
         <script src="/assets/cursor-tooltip.js" defer></script>
+        <script src="/assets/year-filter.js" defer></script>
 
 resources:
   - index.html

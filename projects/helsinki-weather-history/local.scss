@@ -1,0 +1,28 @@
+/*-- scss:rules --*/
+
+/* helsinki-weather-history specific styling: loaded only on this project's page */
+body {
+  padding-top: 60px !important;
+}
+
+.quarto-dashboard .card:first-child {
+  margin-top: 0 !important;
+}
+
+.value-box-value {
+  font-size: 1.6rem !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  color: #ffffff !important;
+}
+
+.value-box-title {
+  font-size: 0.85rem !important;
+  color: #ffffff !important;
+}
+
+.bslib-value-box svg,
+.bslib-value-box .bi {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
