@@ -6,11 +6,6 @@ format:
       light: [litera, ../custom.scss]
       dark: [darkly, ../custom.scss]
     scrolling: true
-    include-in-header:
-      text: |
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -26,50 +21,6 @@ library(dplyr)
 library(DT)
 library(jsonlite)
 library(htmlwidgets)
-
-# Tooltip for hovers
-cursor_tooltip_js <- r"[
-function(el, x) {
-  var isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if (!isDesktop) return;
-
-  Plotly.restyle(el, {hoverinfo: 'none'});
-
-  var tooltip = document.createElement('div');
-  tooltip.style.position = 'fixed';
-  tooltip.style.pointerEvents = 'none';
-  tooltip.style.background = '#333333';
-  tooltip.style.color = '#ffffff';
-  tooltip.style.fontFamily = 'Inter, sans-serif';
-  tooltip.style.fontSize = '13px';
-  tooltip.style.lineHeight = '1.4';
-  tooltip.style.padding = '6px 10px';
-  tooltip.style.borderRadius = '4px';
-  tooltip.style.zIndex = '9999';
-  tooltip.style.display = 'none';
-  tooltip.style.whiteSpace = 'nowrap';
-  document.body.appendChild(tooltip);
-
-  el.on('plotly_hover', function(data) {
-    var pt = data.points[0];
-    var arr = pt.data.hovertext;
-    var text = Array.isArray(arr) ? arr[pt.pointNumber || 0] : arr;
-    tooltip.innerHTML = text;
-    tooltip.style.display = 'block';
-  });
-
-  el.on('plotly_unhover', function() {
-    tooltip.style.display = 'none';
-  });
-
-  el.addEventListener('mousemove', function(e) {
-    if (tooltip.style.display === 'block') {
-      tooltip.style.left = (e.clientX + 16) + 'px';
-      tooltip.style.top = (e.clientY + 16) + 'px';
-    }
-  });
-}
-]"
 
 data <- readRDS("data/election-data-2025.rds")
 elected <- readRDS("data/elected-2025.rds")
@@ -284,8 +235,7 @@ plot_ly(party_data,
       ) 
     })
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ### Column
@@ -435,8 +385,7 @@ plot_ly(occupation_all,
       )
     })
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ## Row
@@ -474,8 +423,7 @@ plot_ly(occupation_elected,
       )
     })
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 ## Row {height="180px"}
 
@@ -511,8 +459,7 @@ plot_ly(gender_all |> filter(sukupuoli %in% names(gender_colors)),
     paper_bgcolor = transparent,
     plot_bgcolor = transparent
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ## Row {height="180px"}
@@ -549,8 +496,7 @@ plot_ly(gender_elected |> filter(sukupuoli %in% names(gender_colors)),
     paper_bgcolor = transparent,
     plot_bgcolor = transparent
   ) |>
-  config(displayModeBar = FALSE) |>
-  htmlwidgets::onRender(cursor_tooltip_js)
+  config(displayModeBar = FALSE)
 ```
 
 ## Row {height="60px"}
