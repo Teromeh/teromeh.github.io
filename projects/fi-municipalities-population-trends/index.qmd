@@ -3,216 +3,9 @@ title: "Finnish municipalities - Population trends"
 format: 
   dashboard:
     theme:
-      light: [litera, ../custom.scss]
-      dark: [darkly, ../custom.scss]
+      light: [litera, ../custom.scss, local.scss]
+      dark: [darkly, ../custom.scss, local.scss]
     scrolling: true
-    include-in-header:
-      text: |
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-        <script src="/assets/cursor-tooltip.js" defer></script>
-        <style>
-        .fi-filter {
-          margin-bottom: 1rem;
-        }
-        .fi-filter-label {
-          display: block;
-          font-family: 'Inter', sans-serif;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--bs-secondary-color, #6c757d);
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          margin-bottom: 0.4rem;
-        }
-        .fi-muni-filter {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 0.5rem;
-          padding: 0.55rem 0.7rem;
-          border: 1px solid var(--bs-border-color, #dee2e6);
-          border-radius: 6px;
-          background: var(--bs-body-bg, #fff);
-          color: var(--bs-body-color, #1a1a1a);
-          font-family: 'Inter', sans-serif;
-          font-size: 13.5px;
-          cursor: pointer;
-          user-select: none;
-        }
-        .fi-muni-filter:hover {
-          border-color: #101622;
-        }
-        .fi-muni-filter-value {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fi-muni-filter-caret {
-          flex: 0 0 auto;
-          width: 10px;
-          height: 6px;
-          color: var(--bs-secondary-color, #6c757d);
-        }
-        .fi-muni-filter.open .fi-muni-filter-caret {
-          transform: rotate(180deg);
-        }
-        .fi-muni-filter-menu {
-          display: none;
-          position: absolute;
-          top: calc(100% + 4px);
-          left: 0;
-          right: 0;
-          max-height: 320px;
-          overflow-y: auto;
-          margin: 0;
-          padding: 0;
-          background: var(--bs-body-bg, #fff);
-          border: 1px solid var(--bs-border-color, #dee2e6);
-          border-radius: 6px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-          z-index: 1000;
-        }
-        .fi-muni-filter.open .fi-muni-filter-menu {
-          display: block;
-        }
-        .fi-muni-filter-search-wrap {
-          position: sticky;
-          top: 0;
-          padding: 0.4rem 0.6rem;
-          background: var(--bs-body-bg, #fff);
-          border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-        }
-        .fi-muni-filter-search {
-          width: 100%;
-          box-sizing: border-box;
-          border: 1px solid var(--bs-border-color, #dee2e6);
-          border-radius: 4px;
-          padding: 0.3rem 0.5rem;
-          font-family: 'Inter', sans-serif;
-          font-size: 13px;
-          color: var(--bs-body-color, #1a1a1a);
-          background: var(--bs-body-bg, #fff);
-        }
-        .fi-muni-filter-search:focus {
-          outline: none;
-          border-color: #101622;
-        }
-        .fi-muni-filter-list {
-          margin: 0;
-          padding: 0.3rem 0;
-          list-style: none;
-        }
-        .fi-muni-option {
-          padding: 0.4rem 0.9rem;
-          font-family: 'Inter', sans-serif;
-          font-size: 13.5px;
-          color: var(--bs-body-color, #1a1a1a);
-          cursor: pointer;
-        }
-        .fi-muni-option:hover {
-          background: var(--bs-tertiary-bg, #f4f4f4);
-        }
-        .fi-muni-option.active {
-          font-weight: 600;
-          color: #101622;
-        }
-        .fi-muni-option.is-hidden {
-          display: none;
-        }
-        .fi-muni-no-results {
-          display: none;
-          padding: 0.4rem 0.9rem;
-          font-family: 'Inter', sans-serif;
-          font-size: 13px;
-          color: var(--bs-secondary-color, #6c757d);
-        }
-        .fi-muni-no-results.show {
-          display: block;
-        }
-        .fi-stats {
-          margin-top: 0.75rem;
-        }
-        .fi-stats-label {
-          display: block;
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          font-weight: 500;
-          color: var(--bs-secondary-color, #6c757d);
-          letter-spacing: 0.04em;
-          margin-bottom: 0.45rem;
-        }
-        .fi-stats-row {
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-        }
-        .fi-stat-value {
-          font-family: 'Outfit', sans-serif;
-          font-size: 15px;
-          font-weight: 700;
-          line-height: 1.35;
-        }
-        .fi-stat-pct {
-          font-weight: 700;
-        }
-        .fi-stat-positive {
-          color: #2f9e44;
-        }
-        .fi-stat-negative {
-          color: #e03131;
-        }
-        .fi-wiki-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-family: 'Inter', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          color: #101622;
-          text-decoration: none;
-        }
-        .fi-wiki-link:hover {
-          text-decoration: underline;
-        }
-        .fi-wiki-link-icon {
-          opacity: 0.5;
-          font-weight: 400;
-        }
-        .fi-map-wrap {
-          margin-top: 0.9rem;
-        }
-        .fi-map-wrap svg {
-          width: 100%;
-          height: auto;
-          display: block;
-        }
-        .fi-map-muni {
-          fill: rgba(255, 204, 1, 0.6);
-          stroke: #101622;
-          stroke-width: 0.25;
-          stroke-linejoin: round;
-          stroke-linecap: round;
-          shape-rendering: geometricPrecision;
-          fill-rule: evenodd;
-          transition: fill 0.15s ease, stroke 0.15s ease;
-        }
-        .fi-map-muni.active {
-          fill: #101622;
-        }
-        .fi-map-link {
-          pointer-events: none;
-        }
-        .fi-map-link:has(.fi-map-muni.active) {
-          pointer-events: auto;
-          cursor: pointer;
-        }
-        .fi-map-link:has(.fi-map-muni.active):hover .fi-map-muni {
-          fill: #2a3550;
-        }
-        </style>
     nav-buttons:
       - icon: envelope
         href: mailto:teromeh@proton.me
@@ -257,7 +50,17 @@ pop_by_group <- lapply(groups, function(g) {
   d |> arrange(Year)
 })
 
-# Pre-compute the full per-municipality trace data
+# All municipalities share one year axis. The filter script keeps a single copy of it
+# (window.popYears) instead of one per municipality, so check that assumption here.
+pop_years <- pop_by_group[[1]]$Year
+same_years <- vapply(pop_by_group, function(d) {
+  length(d$Year) == length(pop_years) && all(d$Year == pop_years)
+}, logical(1))
+if (!all(same_years)) {
+  stop("Municipalities do not all have the same years; population-filter.js assumes one shared year axis.")
+}
+
+# Pre-compute the per-municipality line chart data (the year axis and tooltips are added in the browser)
 line_group_data <- lapply(seq_along(groups), function(i) {
   d <- pop_by_group[[i]]
   pad <- (max(d$Count) - min(d$Count)) * 0.1
@@ -271,10 +74,7 @@ line_group_data <- lapply(seq_along(groups), function(i) {
   }
 
   list(
-    x = I(d$Year),
     y = I(d$Count),
-    hovertext = I(paste0("<b>", d$Year, "</b><br>Population: <b>",
-                          formatC(round(d$Count), big.mark = " ", format = "d"), "</b>")),
     yrange = I(c(min(d$Count) - pad, max(d$Count) + pad)),
     title = title_text,
     whole_number = max(d$Count) < 100000
@@ -293,210 +93,15 @@ change_group_data <- lapply(pop_by_group, function(d) {
   list(diff = diff, pct = pct, latest = last)
 })
 
-filter_js <- paste0(
+# Data only. The behaviour lives in population-filter.js, which is hand-edited and not generated.
+data_js <- paste0(
+  "window.popYears = ", as.character(jsonlite::toJSON(pop_years)), ";\n",
   "window.popData = ", as.character(jsonlite::toJSON(line_group_data, auto_unbox = TRUE)), ";\n",
   "window.popChangeData = ", as.character(jsonlite::toJSON(change_group_data, auto_unbox = TRUE)), ";\n",
   "window.popGroups = ", as.character(jsonlite::toJSON(groups)), ";\n",
-  "window.popWikiUrls = ", as.character(jsonlite::toJSON(wiki_urls)), ";\n",
-  "
-function popFindGraphDiv(preferredId, positionIndex) {
-  var el = document.getElementById(preferredId);
-  if (el && el.data) return el;
-
-  var all = Array.prototype.slice.call(document.querySelectorAll('.js-plotly-plot'));
-  var byId = all.find(function (e) { return e.id && e.id.indexOf(preferredId) !== -1; });
-  if (byId) return byId;
-
-  if (all.length > positionIndex) return all[positionIndex];
-  return null;
-}
-
-function popUpdateLine(el, g) {
-  if (!g || !el) return;
-  Plotly.update(el, {
-    x: [g.x],
-    y: [g.y],
-    hovertext: [g.hovertext]
-  }, {
-    'yaxis.range': g.yrange,
-    'yaxis.tickformat': g.whole_number ? ',d' : '',
-    'yaxis.exponentformat': g.whole_number ? 'none' : 'B'
-  }, [0]);
-  Plotly.relayout(el, { 'title.text': g.title });
-}
-
-function popFormatThousands(n) {
-  var s = Math.round(Math.abs(n)).toString();
-  return s.replace(/\\B(?=(\\d{3})+(?!\\d))/g, ' ');
-}
-
-function popUpdateChange(idx) {
-  var c = window.popChangeData[idx];
-  var latestEl = document.getElementById('population-latest');
-  var absEl = document.getElementById('population-change-abs');
-  var pctEl = document.getElementById('population-change-pct');
-  if (!c) return;
-
-  if (latestEl) latestEl.textContent = popFormatThousands(c.latest);
-
-  if (!absEl || !pctEl) return;
-
-  var positive = c.diff >= 0;
-  var absStr = (positive ? '+ ' : '- ') + popFormatThousands(c.diff);
-  var pctStr = (positive ? '+ ' : '- ') + Math.abs(c.pct).toFixed(1) + '%';
-
-  absEl.textContent = absStr;
-  pctEl.textContent = pctStr;
-  absEl.classList.toggle('fi-stat-positive', positive);
-  absEl.classList.toggle('fi-stat-negative', !positive);
-  pctEl.classList.toggle('fi-stat-positive', positive);
-  pctEl.classList.toggle('fi-stat-negative', !positive);
-}
-
-function popUpdateWiki(idx) {
-  var wrap = document.getElementById('population-wiki');
-  var link = document.getElementById('population-wiki-link');
-  if (!wrap || !link) return;
-
-  var url = window.popWikiUrls[idx];
-  if (!url) {
-    wrap.style.display = 'none';
-    return;
-  }
-
-  var textEl = link.querySelector('.fi-wiki-link-text');
-  if (textEl) textEl.textContent = window.popGroups[idx];
-  link.href = url;
-  wrap.style.display = 'block';
-}
-
-function popUpdateMap(idx) {
-  var svg = document.getElementById('fi-map');
-  if (!svg) return;
-
-  var current = svg.querySelector('.fi-map-muni.active');
-  if (current) current.classList.remove('active');
-
-  var name = window.popGroups[idx];
-  if (!name || name === 'All') return;
-
-  var paths = svg.querySelectorAll('.fi-map-muni');
-  var target = Array.prototype.find.call(paths, function (p) {
-    return p.getAttribute('data-name') === name;
-  });
-  if (target) target.classList.add('active');
-}
-
-window.popUpdateMunicipality = function (idx) {
-  try {
-    var g = window.popData[idx];
-    var el = popFindGraphDiv('population-line', 0);
-    popUpdateLine(el, g);
-    popUpdateChange(idx);
-    popUpdateWiki(idx);
-    popUpdateMap(idx);
-  } catch (err) {
-    console.error('Population filter update failed:', err);
-  }
-};
-
-function popInitFilter() {
-  var control = document.getElementById('municipality-filter');
-  if (!control || control.getAttribute('data-fi-init') === '1') return;
-  control.setAttribute('data-fi-init', '1');
-
-  var valueSpan = control.querySelector('.fi-muni-filter-value');
-  var menu = control.querySelector('.fi-muni-filter-menu');
-  var items = menu ? menu.querySelectorAll('.fi-muni-option') : [];
-  var searchInput = control.querySelector('.fi-muni-filter-search');
-  var noResults = menu ? menu.querySelector('.fi-muni-no-results') : null;
-
-  function filterItems(query) {
-    var q = query.trim().toLowerCase();
-    var anyVisible = false;
-    Array.prototype.forEach.call(items, function (li) {
-      var text = li.textContent.toLowerCase();
-      var match = q === '' || text.split(/[\\s-]+/).some(function (word) {
-        return word.indexOf(q) === 0;
-      });
-      li.classList.toggle('is-hidden', !match);
-      if (match) anyVisible = true;
-    });
-    if (noResults) noResults.classList.toggle('show', !anyVisible);
-  }
-
-  function resetSearch() {
-    if (searchInput) searchInput.value = '';
-    filterItems('');
-  }
-
-  function closeMenu() {
-    control.classList.remove('open');
-    control.setAttribute('aria-expanded', 'false');
-    document.removeEventListener('click', onDocClick);
-  }
-  function openMenu() {
-    control.classList.add('open');
-    control.setAttribute('aria-expanded', 'true');
-    document.addEventListener('click', onDocClick);
-    resetSearch();
-    if (searchInput) {
-      setTimeout(function () { searchInput.focus(); }, 0);
-    }
-  }
-  function onDocClick(e) {
-    if (!control.contains(e.target)) closeMenu();
-  }
-
-  Array.prototype.forEach.call(items, function (li) {
-    li.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var idx = parseInt(li.getAttribute('data-index'), 10);
-      valueSpan.textContent = li.textContent;
-      Array.prototype.forEach.call(items, function (o) { o.classList.remove('active'); });
-      li.classList.add('active');
-      window.popUpdateMunicipality(idx);
-      closeMenu();
-    });
-  });
-
-  if (searchInput) {
-    searchInput.addEventListener('click', function (e) {
-      e.stopPropagation();
-    });
-    searchInput.addEventListener('keydown', function (e) {
-      e.stopPropagation();
-      if (e.key === 'Escape') {
-        closeMenu();
-        control.focus();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        var firstVisible = menu.querySelector('.fi-muni-option:not(.is-hidden)');
-        if (firstVisible) firstVisible.click();
-      }
-    });
-    searchInput.addEventListener('input', function () {
-      filterItems(searchInput.value);
-    });
-  }
-
-  control.addEventListener('click', function (e) {
-    e.stopPropagation();
-    if (control.classList.contains('open')) closeMenu(); else openMenu();
-  });
-  control.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      if (control.classList.contains('open')) closeMenu(); else openMenu();
-    } else if (e.key === 'Escape') {
-      closeMenu();
-    }
-  });
-}
-popInitFilter();
-"
+  "window.popWikiUrls = ", as.character(jsonlite::toJSON(wiki_urls)), ";\n"
 )
-writeLines(filter_js, "population-filter.js")
+writeLines(data_js, "population-data.js")
 ```
 
 ```{r}
@@ -632,7 +237,8 @@ cat(paste0(
   '<span class="fi-wiki-link-icon">\u2197</span>',
   '</a>',
   '</div>',
-  '<script src="population-filter.js"></script>'
+  '<script src="population-data.js" defer></script>',
+  '<script src="population-filter.js" defer></script>'
 ))
 ```
 

@@ -1,0 +1,202 @@
+/*-- scss:rules --*/
+
+/* fi-municipalities-population-trends specific styling: loaded only on this project's page */
+.fi-filter {
+  margin-bottom: 1rem;
+}
+.fi-filter-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bs-secondary-color, #6c757d);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+.fi-muni-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 6px;
+  background: var(--bs-body-bg, #fff);
+  color: var(--bs-body-color, #1a1a1a);
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  cursor: pointer;
+  user-select: none;
+}
+.fi-muni-filter:hover {
+  border-color: #101622;
+}
+.fi-muni-filter-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fi-muni-filter-caret {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 6px;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.fi-muni-filter.open .fi-muni-filter-caret {
+  transform: rotate(180deg);
+}
+.fi-muni-filter-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  background: var(--bs-body-bg, #fff);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+}
+.fi-muni-filter.open .fi-muni-filter-menu {
+  display: block;
+}
+.fi-muni-filter-search-wrap {
+  position: sticky;
+  top: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--bs-body-bg, #fff);
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+.fi-muni-filter-search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--bs-body-color, #1a1a1a);
+  background: var(--bs-body-bg, #fff);
+}
+.fi-muni-filter-search:focus {
+  outline: none;
+  border-color: #101622;
+}
+.fi-muni-filter-list {
+  margin: 0;
+  padding: 0.3rem 0;
+  list-style: none;
+}
+.fi-muni-option {
+  padding: 0.4rem 0.9rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  color: var(--bs-body-color, #1a1a1a);
+  cursor: pointer;
+}
+.fi-muni-option:hover {
+  background: var(--bs-tertiary-bg, #f4f4f4);
+}
+.fi-muni-option.active {
+  font-weight: 600;
+  color: #101622;
+}
+.fi-muni-option.is-hidden {
+  display: none;
+}
+.fi-muni-no-results {
+  display: none;
+  padding: 0.4rem 0.9rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.fi-muni-no-results.show {
+  display: block;
+}
+.fi-stats {
+  margin-top: 0.75rem;
+}
+.fi-stats-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--bs-secondary-color, #6c757d);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.45rem;
+}
+.fi-stats-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.fi-stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.fi-stat-pct {
+  font-weight: 700;
+}
+.fi-stat-positive {
+  color: #2f9e44;
+}
+.fi-stat-negative {
+  color: #e03131;
+}
+.fi-wiki-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #101622;
+  text-decoration: none;
+}
+.fi-wiki-link:hover {
+  text-decoration: underline;
+}
+.fi-wiki-link-icon {
+  opacity: 0.5;
+  font-weight: 400;
+}
+.fi-map-wrap {
+  margin-top: 0.9rem;
+}
+.fi-map-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.fi-map-muni {
+  fill: rgba(255, 204, 1, 0.6);
+  stroke: #101622;
+  stroke-width: 0.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  shape-rendering: geometricPrecision;
+  fill-rule: evenodd;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+.fi-map-muni.active {
+  fill: #101622;
+}
+.fi-map-link {
+  pointer-events: none;
+}
+.fi-map-link:has(.fi-map-muni.active) {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.fi-map-link:has(.fi-map-muni.active):hover .fi-map-muni {
+  fill: #2a3550;
+}
