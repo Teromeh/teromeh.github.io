@@ -217,6 +217,76 @@ select.year-select {
   border: 1px solid var(--bs-border-color);
   border-radius: 4px;
   cursor: pointer;
+
+  /* Same look in every browser: no native arrow, one drawn from the text colour */
+  appearance: none;
+  padding-right: 1.6rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 13px) 50%, calc(100% - 8px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* Neutral focus ring instead of the browser's blue one */
+select.year-select:focus {
+  outline: none;
+}
+
+select.year-select:focus-visible {
+  border-color: var(--bs-body-color);
+  box-shadow: 0 0 0 2px var(--bs-border-color);
+}
+
+/* Option list in browsers that use the native popup (Firefox, Safari) */
+select.year-select option {
+  color: var(--bs-body-color);
+  background-color: var(--bs-body-bg);
+}
+
+/* Chrome / Edge: a stylable popup, so the highlight follows the site theme instead of the system blue.
+   Browsers without support ignore this block and keep the native popup. */
+@supports (appearance: base-select) {
+  select.year-select,
+  select.year-select::picker(select) {
+    appearance: base-select;
+  }
+
+  select.year-select {
+    background-image: none;
+    align-items: center;
+  }
+
+  select.year-select::picker(select) {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 6px;
+    padding: 0.25rem;
+    margin-top: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  select.year-select option {
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  select.year-select option:hover,
+  select.year-select option:focus-visible {
+    outline: none;
+    background-color: var(--bs-tertiary-bg);
+    background-color: color-mix(in srgb, currentColor 9%, transparent);
+  }
+
+  select.year-select option:checked {
+    font-weight: 600;
+  }
+
+  select.year-select option::checkmark {
+    display: none;
+  }
 }
 
 /* On donut charts: floats in the top-right corner of the plot */
@@ -226,7 +296,7 @@ select.year-select.year-select-float {
   right: 20px;
   z-index: 15;
   height: 30px;
-  padding: 0 0.6rem;
+  padding: 0 1.6rem 0 0.6rem;
 }
 
 /* In table card headers: "Year" label + select, pushed right by the header's flex layout */
@@ -245,6 +315,6 @@ select.year-select.year-select-float {
 
 .year-select-wrap select.year-select {
   min-width: 4.5rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 1.4rem 0.2rem 0.5rem;
   font-size: 11px;
 }
