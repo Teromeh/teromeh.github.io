@@ -1,17 +1,5 @@
 /**
  * Cursor-following tooltip for Plotly charts, shared across pages.
- *
- * Finds every Plotly graph on the page and, on desktop pointers only:
- *  - disables Plotly's built-in hover label
- *  - forces hovermode to "closest" so the tooltip only appears when the
- *    cursor is actually touching a bar/point/slice (not just in its column)
- *  - shows a small floating box next to the cursor instead, using each
- *    trace's own hovertext + hoverlabel colors, so it automatically matches
- *    whatever palette a given page/chart already defines.
- *
- * Usage: include once per page via
- *   <script src="/assets/cursor-tooltip.js" defer></script>
- * No R-side wiring (no onRender calls) needed on the plot_ly() pipelines.
  */
 (function () {
   function isDesktop() {
@@ -28,16 +16,10 @@
     if (el.dataset.cursorTooltip) return; // already wired up
     el.dataset.cursorTooltip = 'true';
 
-    // "closest" is what makes touch-only hover work for bars (the cursor has to
-    // actually be over the bar shape, not just anywhere in its category band).
-    // For other trace types - e.g. a filled line chart using hovermode "x" so the
-    // whole shaded area under the curve responds to hover - leave the author's
-    // own choice alone.
     var hasBar = (el.data || []).some(function (trace) { return trace.type === 'bar'; });
     var layoutUpdate = hasBar ? { hovermode: 'closest' } : {};
 
-    // hoverinfo 'none' hides Plotly's own label but plotly_hover/plotly_unhover
-    // still fire.
+    // hoverinfo 'none' hides Plotly's own label
     Plotly.update(el, { hoverinfo: 'none' }, layoutUpdate);
 
     var tooltip = document.createElement('div');
