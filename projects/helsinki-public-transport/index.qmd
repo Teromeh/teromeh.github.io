@@ -41,7 +41,7 @@ tram_data <- data |>
   filter(Vechile == "Tram") |>
   arrange(Year)
 
-bus_icon <- base64enc::dataURI(file = "icons/bus-icon.png", mime = "image/png")
+bus_icon <- base64enc::dataURI(file = "icons/Bus-icon.png", mime = "image/png")
 metro_icon <- base64enc::dataURI(file = "icons/Metro-icon.png", mime = "image/png")
 train_icon <- base64enc::dataURI(file = "icons/Train-icon.png", mime = "image/png")
 tram_icon <- base64enc::dataURI(file = "icons/Tram-icon.png", mime = "image/png")
