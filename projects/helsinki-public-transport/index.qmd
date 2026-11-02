@@ -19,6 +19,7 @@ format:
 library(plotly)
 library(dplyr)
 library(base64enc)
+library(htmlwidgets)
 
 data <- readRDS("data/hki-public-transport.rds")
 
@@ -45,6 +46,28 @@ bus_icon <- base64enc::dataURI(file = "icons/Bus-icon.png", mime = "image/png")
 metro_icon <- base64enc::dataURI(file = "icons/Metro-icon.png", mime = "image/png")
 train_icon <- base64enc::dataURI(file = "icons/Train-icon.png", mime = "image/png")
 tram_icon <- base64enc::dataURI(file = "icons/Tram-icon.png", mime = "image/png")
+
+# Adds an "icon-hover" class to the icon while the pointer is over it.
+# The grow animation itself is defined in custom.scss.
+icon_hover_js <- "
+function(el, x) {
+  var getImg = function() { return el.querySelector('.main-svg image'); };
+
+  el.addEventListener('mousemove', function(e) {
+    var img = getImg();
+    if (!img) return;
+    var r = img.getBoundingClientRect();
+    var inside = e.clientX >= r.left && e.clientX <= r.right &&
+                 e.clientY >= r.top  && e.clientY <= r.bottom;
+    img.classList.toggle('icon-hover', inside);
+  });
+
+  el.addEventListener('mouseleave', function() {
+    var img = getImg();
+    if (img) img.classList.remove('icon-hover');
+  });
+}
+"
 ```
 
 ## Row {height="550px"}
@@ -118,7 +141,8 @@ plot_ly(bus_data,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(icon_hover_js)
 ```
 
 ### Column
@@ -190,7 +214,8 @@ plot_ly(metro_data,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(icon_hover_js)
 ```
 
 ## Row {height="550px"}
@@ -264,7 +289,8 @@ plot_ly(train_data,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(icon_hover_js)
 ```
 
 ### Column
@@ -336,7 +362,8 @@ plot_ly(tram_data,
       )
     })
   ) |>
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) |>
+  htmlwidgets::onRender(icon_hover_js)
 ```
 
 ## Row

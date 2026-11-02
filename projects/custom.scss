@@ -100,6 +100,18 @@ table.dataTable {
   cursor: default !important;
 }
 
+/* Plotly layout images (transport icons): smooth hover grow.
+   The "icon-hover" class is toggled by the onRender JS in index.qmd. */
+.js-plotly-plot .main-svg image {
+  transform-box: fill-box;      /* scale around the icon's own centre */
+  transform-origin: center;
+  transition: transform 0.2s ease;
+}
+
+.js-plotly-plot .main-svg image.icon-hover {
+  transform: scale(1.15);       /* adjust to taste */
+}
+
 /* ESS Sidebar country filter: sticky, pinned below the fixed navbar */
 .quarto-dashboard .sidebar {
   position: sticky !important;
