@@ -4,3 +4,11 @@
 .Rhistory
 .RData
 .Ruserdata
+.Renviron
+.env
+.httr-oauth
+
+# Caches and OS clutter
+**/*_cache/
+.DS_Store
+Thumbs.db
